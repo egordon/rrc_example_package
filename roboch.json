@@ -1,0 +1,6 @@
+{
+    "repository": "https://github.com/madan96/rrc_example_package.git",
+    "branch": "master",
+    "email": "rishabhmadan96@gmail.com",
+    "singularity_image": "rrc_phase2.sif"
+}

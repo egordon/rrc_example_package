@@ -388,7 +388,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"]
         switch = True
         for f in tip_forces:
-            if f < 0.01:
+            if f < 0.0515:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -474,7 +474,7 @@ class StateSpacePolicy:
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = torque + self._get_gravcomp(observation)
+        ret = torque #+ self._get_gravcomp(observation)
         return ret
 
 

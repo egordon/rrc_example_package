@@ -388,7 +388,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"]
         switch = True
         for f in tip_forces:
-            if f < 0.45:
+            if f < 0.01:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -495,7 +495,7 @@ def main():
 
     # initialize cube env
     env = cube_env.RealRobotCubeEnv(
-        goal, difficulty, cube_env.ActionType.TORQUE, frameskip=250
+        goal, difficulty, cube_env.ActionType.TORQUE, frameskip=1
     )
     observation = env.reset()
 

@@ -495,7 +495,7 @@ def main():
 
     # initialize cube env
     env = cube_env.RealRobotCubeEnv(
-        goal, difficulty, cube_env.ActionType.TORQUE, frameskip=1
+        goal, difficulty, cube_env.ActionType.TORQUE, frameskip=250
     )
     observation = env.reset()
 

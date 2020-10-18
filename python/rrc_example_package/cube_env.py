@@ -10,6 +10,10 @@ import trifinger_simulation.visual_objects
 from trifinger_simulation import trifingerpro_limits
 from trifinger_simulation.tasks import move_cube
 
+from rrc_simulation.sim_finger import SimFinger
+import numpy as np
+from rrc_simulation import pinocchio_utils
+
 
 class ActionType(enum.Enum):
     """Different action types that can be used to control the robot."""
@@ -71,6 +75,12 @@ class RealRobotCubeEnv(gym.GoalEnv):
         # will be initialized in reset()
         self.platform = None
 
+        self.simfinger = SimFinger(
+            finger_type="trifingerpro",
+            time_step=1. / self.frameskip,
+            enable_visualization=False,
+        )
+
         # Create the action and observation spaces
         # ========================================
 
@@ -131,6 +141,14 @@ class RealRobotCubeEnv(gym.GoalEnv):
                         "position": robot_position_space,
                         "velocity": robot_velocity_space,
                         "torque": robot_torque_space,
+                        "tip_positions": gym.spaces.Box(
+                            low=np.array(
+                                [trifingerpro_limits.object_position.low] * 3),
+                            high=np.array(
+                                [trifingerpro_limits.object_position.high] * 3),
+                        ),
+                        "tip_force": gym.spaces.Box(low=np.zeros(3),
+                                                    high=np.ones(3)),
                     }
                 ),
                 "action": self.action_space,
@@ -239,7 +257,6 @@ class RealRobotCubeEnv(gym.GoalEnv):
         # need to already do one step to get initial observation
         # TODO disable frameskip here?
         observation, _, _, _ = self.step(self._initial_action)
-
         return observation
 
     def _reset_platform_frontend(self):
@@ -306,6 +323,8 @@ class RealRobotCubeEnv(gym.GoalEnv):
                 "position": robot_observation.position,
                 "velocity": robot_observation.velocity,
                 "torque": robot_observation.torque,
+                "tip_positions": np.array(self.simfinger.pinocchio_utils.forward_kinematics(robot_observation.position)),
+                "tip_force": robot_observation.tip_force,
             },
             "action": action,
             "desired_goal": self.goal,

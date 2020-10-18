@@ -11,6 +11,9 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 from rrc_example_package import cube_env
+from trifinger_simulation import trifingerpro_limits
+
+import pybullet
 
 
 class States(enum.Enum):
@@ -67,7 +70,6 @@ class StateSpacePolicy:
 
     def __init__(self, env, difficulty, observation):
         self.action_space = env.action_space
-        self.finger = env.platform.simfinger
         self.state = States.ALIGN
         self.difficulty = difficulty
 
@@ -83,6 +85,7 @@ class StateSpacePolicy:
             self.do_premanip = False
 
         self.t = 0
+        self.finger = env.simfinger
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -164,15 +167,7 @@ class StateSpacePolicy:
         return ret
 
     def _get_tip_poses(self, observation):
-        # Return: numpy(3 * num_fingers)
-        tips = []
-        for tip in self.finger.pybullet_tip_link_indices:
-            state = pybullet.getLinkState(
-                self.finger.finger_id,
-                tip)
-            tips.append(np.array(state[0]))
-        tips = np.array(tips).flatten()
-        return tips
+        return observation["observation"]["tip_positions"].flatten()
 
     def prealign(self, observation):
         # Return torque for align step
@@ -225,7 +220,7 @@ class StateSpacePolicy:
     def preinto(self, observation):
         # Return torque for into step
         current = self._get_tip_poses(observation)
-
+        
         desired = np.tile(observation["achieved_goal"]["position"], 3)
         desired[3*self.manip_arm+2] += 0.4*self.CUBE_SIZE
 
@@ -235,7 +230,7 @@ class StateSpacePolicy:
         err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.5
 
         # Read Tip Force
-        tip_forces = self.finger._get_latest_observation().tip_force
+        tip_forces = observation["observation"]["tip_force"]
         switch = True
         for f in tip_forces:
             if f < 0.051:
@@ -317,7 +312,7 @@ class StateSpacePolicy:
         err = current - desired
 
         # Read Tip Force
-        tip_forces = self.finger._get_latest_observation().tip_force
+        tip_forces = observation["observation"]["tip_force"]
         switch = False
         for f in tip_forces:
             if f < 0.051:
@@ -385,12 +380,12 @@ class StateSpacePolicy:
         # Return torque for into step
         current = self._get_tip_poses(observation)
 
-        desired = np.tile(observation["achieved_goal"]["position"], 3)
+        desired = np.tile(observation["desired_goal"]["position"], 3)
 
         err = desired - current
 
         # Read Tip Force
-        tip_forces = self.finger._get_latest_observation().tip_force
+        tip_forces = observation["observation"]["tip_force"]
         switch = True
         for f in tip_forces:
             if f < 0.0515:
@@ -399,7 +394,6 @@ class StateSpacePolicy:
             self.state = States.GOAL
 
         self.goal_err_sum = np.zeros(9)
-
         return 0.1 * err
 
     def goal(self, observation):
@@ -422,7 +416,6 @@ class StateSpacePolicy:
 
         if err_mag < 0.01 and self.difficulty == 4:
             self.state = States.ORIENT
-
         return 0.04 * into_err + 0.11 * goal_err + 0.0004 * self.goal_err_sum
 
     def orient(self, observation):
@@ -502,17 +495,24 @@ def main():
 
     # initialize cube env
     env = cube_env.RealRobotCubeEnv(
-        goal, difficulty, cube_env.ActionType.POSITION, frameskip=200
+        goal, difficulty, cube_env.ActionType.TORQUE, frameskip=200
     )
     observation = env.reset()
 
     # initialize policy object
     policy = StateSpacePolicy(env, difficulty, observation)
+    accumulated_reward = 0.
+    is_done = False
 
+    ctr = 0
     while not is_done:
+        # ctr += 1
+        # if ctr > 12000:
+        #     break
         action = policy.predict(observation)
         observation, reward, is_done, info = env.step(action)
         print("reward:", reward)
+        # is_done = False
         accumulated_reward += reward
 
     print("------")

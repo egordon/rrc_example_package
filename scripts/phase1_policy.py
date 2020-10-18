@@ -388,7 +388,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"]
         switch = True
         for f in tip_forces:
-            if f < 0.0515:
+            if f < 0.45:
                 switch = False
         if switch:
             self.state = States.GOAL

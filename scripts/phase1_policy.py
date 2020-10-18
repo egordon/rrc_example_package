@@ -510,6 +510,9 @@ def main():
         # if ctr > 12000:
         #     break
         action = policy.predict(observation)
+        # debug
+        print ("Tip forces: ", observation["observation"]["tip_force"])
+
         observation, reward, is_done, info = env.step(action)
         print("reward:", reward)
         # is_done = False

@@ -20,6 +20,8 @@ import pybullet
 class States(enum.Enum):
     """ Different States for StateSpacePolicy """
 
+    RESET = enum.auto()
+
     #: Align fingers to 3 points above cube
     ALIGN = enum.auto()
 
@@ -71,7 +73,7 @@ class StateSpacePolicy:
 
     def __init__(self, env, difficulty, observation):
         self.action_space = env.action_space
-        self.state = States.ALIGN
+        self.state = States.RESET
         self.difficulty = difficulty
 
         self.EPS = 1E-2
@@ -362,6 +364,15 @@ class StateSpacePolicy:
 
         return force
 
+    def reset(self, observation):
+        current = self._get_tip_poses(observation)
+        up_position = np.array([0.5, 1.2, -2.4] * 3)
+        desired = np.array(self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+        err = desired - current
+        if np.linalg.norm(err) < 2 * self.EPS:
+            self.state = States.ALIGN
+        return 0.1 * err
+
     def align(self, observation):
         # Return torque for align step
         current = self._get_tip_poses(observation)
@@ -483,7 +494,10 @@ class StateSpacePolicy:
         if self.do_premanip:
             print ("do premanip")
             force = self.premanip(observation)
-
+        
+        elif self.state == States.RESET:
+            print ("do reset")
+            force = self.reset(observation)
         elif self.state == States.ALIGN:
             print ("do align")
             force = self.align(observation)
@@ -508,7 +522,7 @@ class StateSpacePolicy:
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = np.array(torque, dtype=np.float64)
+        ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
         print ("Torque value: ", ret)
         ret = np.clip(ret, trifingerpro_limits.robot_torque.low, trifingerpro_limits.robot_torque.high)
         return ret

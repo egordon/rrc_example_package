@@ -143,12 +143,19 @@ class StateSpacePolicy:
 
     def _get_gravcomp(self, observation):
         # Returns: 9 torques required for grav comp
-        ret = pybullet.calculateInverseDynamics(self.finger.finger_id,
+        ret2 = pybullet.calculateInverseDynamics(self.finger.finger_id,
                                                 observation["observation"]["position"].tolist(
                                                 ),
                                                 observation["observation"]["velocity"].tolist(),
-                                                np.zeros(len(observation["observation"]["position"])).tolist())
-        ret = np.array(ret)
+                                                np.zeros(len(observation["observation"]["position"])).tolist(),
+                                                self.finger._pybullet_client_id)
+
+        # ret = pybullet.calculateInverseDynamics(self.finger.finger_id,
+        #                                         observation["observation"]["position"].tolist(
+        #                                         ),
+        #                                         observation["observation"]["velocity"].tolist(),
+        #                                         np.zeros(len(observation["observation"]["position"])).tolist())
+        ret = np.array(ret2)
         return ret
 
     def _get_jacobians(self, observation):
@@ -161,7 +168,8 @@ class StateSpacePolicy:
                 np.zeros(3).tolist(),
                 observation["observation"]["position"].tolist(),
                 observation["observation"]["velocity"].tolist(),
-                np.zeros(len(observation["observation"]["position"])).tolist()
+                np.zeros(len(observation["observation"]["position"])).tolist(),
+                self.finger._pybullet_client_id
             )
             ret.append(J)
         ret = np.vstack(ret)
@@ -547,9 +555,6 @@ def main():
     t = env.platform.append_desired_action(zero_torque_action)
     env.platform.wait_until_timeindex(t)
     while not is_done:
-        # ctr += 1
-        # if ctr > 6000:
-        #     break
         action = policy.predict(observation)
         observation, reward, is_done, info = env.step(action)
         # print("reward:", reward)

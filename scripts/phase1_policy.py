@@ -542,7 +542,9 @@ def main():
         # make sure to not exceed the number of allowed actions
         if t >= episode_length - 1:
             return
-
+    zero_torque_action = robot_interfaces.trifinger.Action()
+    t = env.platform.append_desired_action(zero_torque_action)
+    env.platform.wait_until_timeindex(t)
     while not is_done:
         # ctr += 1
         # if ctr > 6000:

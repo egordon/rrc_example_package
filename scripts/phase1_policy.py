@@ -367,7 +367,7 @@ class StateSpacePolicy:
         print ("[ALIGN] error: ", err)
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.LOWER
-        return 0.1 * err
+        return 0.25 * err
 
     def lower(self, observation):
         # Return torque for lower step
@@ -501,6 +501,7 @@ class StateSpacePolicy:
 
         ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
         print ("Torque value: ", ret)
+        ret = np.clip(ret, trifingerpro_limits.robot_torque.low, trifingerpro_limits.robot_torque.high)
         return ret
 
 

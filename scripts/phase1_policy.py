@@ -532,7 +532,7 @@ def main():
 
     # initialize cube env
     env = cube_env.RealRobotCubeEnv(
-        goal, difficulty, cube_env.ActionType.TORQUE, frameskip=3
+        goal, difficulty, cube_env.ActionType.TORQUE, frameskip=1
     )
     observation = env.reset()
 
@@ -551,11 +551,19 @@ def main():
         # make sure to not exceed the number of allowed actions
         if t >= episode_length - 1:
             return
-    zero_torque_action = robot_interfaces.trifinger.Action()
-    t = env.platform.append_desired_action(zero_torque_action)
-    env.platform.wait_until_timeindex(t)
+
+    """
+    TODOs
+    * send zero torque [should fall down]
+    * test grav comp [should stay still]
+    * test jacobian: send constant force +x for all arms
+    """
+    # zero_torque_action = robot_interfaces.trifinger.Action()
+    # t = env.platform.append_desired_action(zero_torque_action)
+    # env.platform.wait_until_timeindex(t)
     while not is_done:
-        action = policy.predict(observation)
+        # action = policy.predict(observation)
+        action = np.zeros((9))
         observation, reward, is_done, info = env.step(action)
         # print("reward:", reward)
         accumulated_reward += reward

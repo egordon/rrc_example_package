@@ -371,7 +371,7 @@ class StateSpacePolicy:
         err = desired - current
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.ALIGN
-        return 0.1 * err
+        return 0.25 * err
 
     def align(self, observation):
         # Return torque for align step

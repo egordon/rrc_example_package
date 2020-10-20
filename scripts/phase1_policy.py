@@ -89,6 +89,7 @@ class StateSpacePolicy:
             # self._calculate_premanip(observation)
 
         self.t = 0
+        self.last_reset_error = 0.
         self.finger = env.sim_platform.simfinger
 
     def _calculate_premanip(self, observation):
@@ -369,9 +370,11 @@ class StateSpacePolicy:
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         desired = np.array(self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
         err = desired - current
+        delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.ALIGN
-        return 0.25 * err
+        self.last_reset_error = err
+        return 0.25 * err + 0.1 * delta_err
 
     def align(self, observation):
         # Return torque for align step

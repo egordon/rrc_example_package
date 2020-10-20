@@ -12,6 +12,7 @@ from scipy.spatial.transform import Rotation as R
 
 from rrc_example_package import cube_env
 from trifinger_simulation import trifingerpro_limits
+from trifinger_simulation.tasks import move_cube
 
 import pybullet
 
@@ -498,7 +499,7 @@ class StateSpacePolicy:
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = torque# + self._get_gravcomp(observation)
+        ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
         print ("Torque value: ", ret)
         return ret
 
@@ -512,7 +513,9 @@ def main():
     # arguments
     difficulty = int(sys.argv[1])
     goal_pose_json = sys.argv[2]
-    goal = json.loads(goal_pose_json)
+    # goal = json.loads(goal_pose_json)
+    goal_pose = move_cube.sample_goal(1)
+    goal = {'position': goal_pose.position, 'orientation': goal_pose.orientation}
     print(
         "Goal: %s/%s (difficulty: %d)"
         % (goal["position"], goal["orientation"], difficulty)
@@ -520,7 +523,7 @@ def main():
 
     # initialize cube env
     env = cube_env.RealRobotCubeEnv(
-        goal, difficulty, cube_env.ActionType.TORQUE, frameskip=1
+        goal, difficulty, cube_env.ActionType.TORQUE, frameskip=3
     )
     observation = env.reset()
 
@@ -545,12 +548,8 @@ def main():
         # if ctr > 6000:
         #     break
         action = policy.predict(observation)
-        # debug
-        # print ("Tip forces: ", observation["observation"]["tip_force"])
-
         observation, reward, is_done, info = env.step(action)
         # print("reward:", reward)
-        # is_done = False
         accumulated_reward += reward
 
     print("------")

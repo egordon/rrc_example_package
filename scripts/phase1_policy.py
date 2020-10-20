@@ -507,9 +507,9 @@ class StateSpacePolicy:
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
+        ret = np.array(self._get_gravcomp(observation), dtype=np.float64)
         print ("Torque value: ", ret)
-        ret = np.clip(ret, trifingerpro_limits.robot_torque.low, trifingerpro_limits.robot_torque.high)
+        # ret = np.clip(ret, trifingerpro_limits.robot_torque.low, trifingerpro_limits.robot_torque.high)
         return ret
 
 
@@ -562,8 +562,8 @@ def main():
     # t = env.platform.append_desired_action(zero_torque_action)
     # env.platform.wait_until_timeindex(t)
     while not is_done:
-        # action = policy.predict(observation)
-        action = np.zeros((9))
+        action = policy.predict(observation)
+        # action = np.zeros((9))
         observation, reward, is_done, info = env.step(action)
         # print("reward:", reward)
         accumulated_reward += reward

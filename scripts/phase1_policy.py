@@ -85,7 +85,7 @@ class StateSpacePolicy:
             self.do_premanip = False
 
         self.t = 0
-        self.finger = env.simfinger
+        self.finger = env.sim_platform.simfinger
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -357,10 +357,8 @@ class StateSpacePolicy:
             np.array([0, 1.6, 2, 1.6 * 0.866, 1.6 * (-0.5),
                       2, 1.6 * (-0.866), 1.6 * (-0.5), 2])
 
-        print ("[ALIGN] current_pose: ", current)
-        print ("[ALIGN] desired_pose: ", desired)
-
         err = desired - current
+        print ("[ALIGN] error: ", err)
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.LOWER
         return 0.1 * err
@@ -514,15 +512,15 @@ def main():
     is_done = False
 
     ctr = 0
-    position_up = [0.5, 1.2, -2.4] * 3
-    action = robot_interfaces.trifinger.Action(position=position_up)
-    for _ in range(500):
-        t = env.platform.append_desired_action(action)
-        env.platform.wait_until_timeindex(t)
+    # position_up = [0.5, 1.2, -2.4] * 3
+    # action = robot_interfaces.trifinger.Action(position=position_up)
+    # for _ in range(500):
+    #     t = env.platform.append_desired_action(action)
+    #     env.platform.wait_until_timeindex(t)
 
-        # make sure to not exceed the number of allowed actions
-        if t >= episode_length - 1:
-            return
+    #     # make sure to not exceed the number of allowed actions
+    #     if t >= episode_length - 1:
+    #         return
 
     while not is_done:
         # ctr += 1

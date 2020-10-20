@@ -357,6 +357,9 @@ class StateSpacePolicy:
             np.array([0, 1.6, 2, 1.6 * 0.866, 1.6 * (-0.5),
                       2, 1.6 * (-0.866), 1.6 * (-0.5), 2])
 
+        print ("[ALIGN] current_pose: ", current)
+        print ("[ALIGN] desired_pose: ", desired)
+
         err = desired - current
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.LOWER
@@ -454,27 +457,33 @@ class StateSpacePolicy:
         force = np.zeros(9)
 
         if self.do_premanip:
+            print ("do premanip")
             force = self.premanip(observation)
 
         elif self.state == States.ALIGN:
+            print ("do align")
             force = self.align(observation)
 
         elif self.state == States.LOWER:
+            print ("do lower")
             force = self.lower(observation)
 
         elif self.state == States.INTO:
+            print ("do into")
             force = self.into(observation)
 
         elif self.state == States.GOAL:
+            print ("do goal")
             force = self.goal(observation)
 
         elif self.state == States.ORIENT:
+            print ("do orient")
             force = self.orient(observation)
 
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = torque #+ self._get_gravcomp(observation)
+        ret = torque + self._get_gravcomp(observation)
         return ret
 
 
@@ -505,16 +514,26 @@ def main():
     is_done = False
 
     ctr = 0
+    position_up = [0.5, 1.2, -2.4] * 3
+    action = robot_interfaces.trifinger.Action(position=position_up)
+    for _ in range(500):
+        t = env.platform.append_desired_action(action)
+        env.platform.wait_until_timeindex(t)
+
+        # make sure to not exceed the number of allowed actions
+        if t >= episode_length - 1:
+            return
+
     while not is_done:
         # ctr += 1
         # if ctr > 12000:
         #     break
         action = policy.predict(observation)
         # debug
-        print ("Tip forces: ", observation["observation"]["tip_force"])
+        # print ("Tip forces: ", observation["observation"]["tip_force"])
 
         observation, reward, is_done, info = env.step(action)
-        print("reward:", reward)
+        # print("reward:", reward)
         # is_done = False
         accumulated_reward += reward
 

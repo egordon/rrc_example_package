@@ -498,7 +498,7 @@ class StateSpacePolicy:
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = torque + self._get_gravcomp(observation)
+        ret = torque# + self._get_gravcomp(observation)
         print ("Torque value: ", ret)
         return ret
 
@@ -532,7 +532,7 @@ def main():
     ctr = 0
     position_up = [0.5, 1.2, -2.4] * 3
     action = robot_interfaces.trifinger.Action(position=position_up)
-    for _ in range(500):
+    for _ in range(50):
         t = env.platform.append_desired_action(action)
         env.platform.wait_until_timeindex(t)
 

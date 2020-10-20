@@ -542,15 +542,15 @@ def main():
     is_done = False
 
     ctr = 0
-    position_up = [0.5, 1.2, -2.4] * 3
-    action = robot_interfaces.trifinger.Action(position=position_up)
-    for _ in range(50):
-        t = env.platform.append_desired_action(action)
-        env.platform.wait_until_timeindex(t)
+    # position_up = [0.5, 1.2, -2.4] * 3
+    # action = robot_interfaces.trifinger.Action(position=position_up)
+    # for _ in range(50):
+    #     t = env.platform.append_desired_action(action)
+    #     env.platform.wait_until_timeindex(t)
 
-        # make sure to not exceed the number of allowed actions
-        if t >= episode_length - 1:
-            return
+    #     # make sure to not exceed the number of allowed actions
+    #     if t >= episode_length - 1:
+    #         return
 
     """
     TODOs

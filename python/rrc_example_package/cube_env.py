@@ -247,6 +247,10 @@ class RealRobotCubeEnv(gym.GoalEnv):
                 observation["observation"]["position"],
                 observation["observation"]["velocity"]
             )
+            self.simfinger.reset_finger_positions_and_velocities(
+                observation["observation"]["position"],
+                observation["observation"]["velocity"]
+            )
 
             reward += self.compute_reward(
                 observation["achieved_goal"],

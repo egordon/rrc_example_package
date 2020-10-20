@@ -380,7 +380,13 @@ class StateSpacePolicy:
     def into(self, observation):
         # Return torque for into step
         current = self._get_tip_poses(observation)
-
+        current_x = current[0::3]
+        difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
+        print ("TIP diff: ", difference)
+        if any(y < 0.02 for y in difference):
+            self.state = States.ALIGN
+    
+        print ("Current tip pose: ", current)
         desired = np.tile(observation["desired_goal"]["position"], 3)
 
         err = desired - current
@@ -482,6 +488,7 @@ class StateSpacePolicy:
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
         ret = torque + self._get_gravcomp(observation)
+        print ("Torque value: ", ret)
         return ret
 
 
@@ -524,7 +531,7 @@ def main():
 
     while not is_done:
         # ctr += 1
-        # if ctr > 12000:
+        # if ctr > 6000:
         #     break
         action = policy.predict(observation)
         # debug

@@ -9,6 +9,7 @@ import trifinger_simulation
 import trifinger_simulation.visual_objects
 from trifinger_simulation import trifingerpro_limits
 from trifinger_simulation.tasks import move_cube
+from rrc_simulation import visual_objects
 
 from rrc_simulation.sim_finger import SimFinger
 import numpy as np
@@ -79,6 +80,13 @@ class RealRobotCubeEnv(gym.GoalEnv):
             finger_type="trifingerpro",
             time_step=1. / self.frameskip,
             enable_visualization=False,
+        )
+
+        self.goal_marker = visual_objects.CubeMarker(
+            width=0.065,
+            position=self.goal["position"],
+            orientation=self.goal["orientation"],
+            physicsClientId=self.simfinger._pybullet_client_id,
         )
 
         # Create the action and observation spaces
@@ -226,6 +234,7 @@ class RealRobotCubeEnv(gym.GoalEnv):
             # send action to robot
             robot_action = self._gym_action_to_robot_action(action)
             t = self.platform.append_desired_action(robot_action)
+            self.platform.wait_until_timeindex(t)
 
             observation = self._create_observation(t, action)
 
@@ -251,6 +260,13 @@ class RealRobotCubeEnv(gym.GoalEnv):
         # pre-train locally in simulation.
         self._reset_platform_frontend()
         # self._reset_direct_simulation()
+
+        self.goal_marker = visual_objects.CubeMarker(
+            width=0.065,
+            position=self.goal["position"],
+            orientation=self.goal["orientation"],
+            physicsClientId=self.simfinger._pybullet_client_id,
+        )
 
         self.step_count = 0
 

@@ -504,12 +504,13 @@ class StateSpacePolicy:
             print ("do orient")
             force = self.orient(observation)
 
+        force = np.array([0., 0., 0.5, 0., 0., 0.5, 0., 0., 0.5])
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = np.array(self._get_gravcomp(observation), dtype=np.float64)
+        ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
         print ("Torque value: ", ret)
-        # ret = np.clip(ret, trifingerpro_limits.robot_torque.low, trifingerpro_limits.robot_torque.high)
+        ret = np.clip(ret, trifingerpro_limits.robot_torque.low, trifingerpro_limits.robot_torque.high)
         return ret
 
 
@@ -558,8 +559,8 @@ def main():
     * test grav comp [should stay still]
     * test jacobian: send constant force +x for all arms
     """
-    # zero_torque_action = robot_interfaces.trifinger.Action()
-    # t = env.platform.append_desired_action(zero_torque_action)
+    zero_torque_action = robot_interfaces.trifinger.Action()
+    t = env.platform.append_desired_action(zero_torque_action)
     # env.platform.wait_until_timeindex(t)
     while not is_done:
         action = policy.predict(observation)

@@ -83,6 +83,7 @@ class StateSpacePolicy:
             self._calculate_premanip(observation)
         else:
             self.do_premanip = False
+            # self._calculate_premanip(observation)
 
         self.t = 0
         self.finger = env.sim_platform.simfinger
@@ -144,8 +145,7 @@ class StateSpacePolicy:
         ret = pybullet.calculateInverseDynamics(self.finger.finger_id,
                                                 observation["observation"]["position"].tolist(
                                                 ),
-                                                np.zeros(
-                                                    len(observation["observation"]["position"])).tolist(),
+                                                observation["observation"]["velocity"].tolist(),
                                                 np.zeros(len(observation["observation"]["position"])).tolist())
         ret = np.array(ret)
         return ret
@@ -233,7 +233,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"]
         switch = True
         for f in tip_forces:
-            if f < 0.051:
+            if f < 0.03:
                 switch = False
 
         # Override with small diff
@@ -328,18 +328,23 @@ class StateSpacePolicy:
         force = np.zeros(9)
 
         if self.state == States.ALIGN:
+            print ("do prealign")
             force = self.prealign(observation)
 
         elif self.state == States.LOWER:
+            print ("do prelower")
             force = self.prelower(observation)
 
         elif self.state == States.INTO:
+            print ("do preinto")
             force = self.preinto(observation)
 
         elif self.state == States.GOAL:
+            print ("do pregoal")
             force = self.pregoal(observation)
 
         elif self.state == States.ORIENT:
+            print ("do preorient")
             force = self.preorient(observation)
 
         if self.manip_angle == 0:
@@ -395,7 +400,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"]
         switch = True
         for f in tip_forces:
-            if f < 0.0515:
+            if f < 0.03:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -406,6 +411,12 @@ class StateSpacePolicy:
     def goal(self, observation):
         # Return torque for goal step
         current = self._get_tip_poses(observation)
+        current_x = current[0::3]
+        difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
+        print ("TIP diff: ", difference)
+        # if any(y < 0.02 for y in difference):
+        #     self.state = States.ALIGN
+        #     return 0.0
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
@@ -423,7 +434,7 @@ class StateSpacePolicy:
 
         if err_mag < 0.01 and self.difficulty == 4:
             self.state = States.ORIENT
-        return 0.04 * into_err + 0.11 * goal_err + 0.0004 * self.goal_err_sum
+        return 0.06 * into_err + 0.12 * goal_err + 0.0008 * self.goal_err_sum
 
     def orient(self, observation):
         # Return torque for lower step
@@ -519,15 +530,15 @@ def main():
     is_done = False
 
     ctr = 0
-    # position_up = [0.5, 1.2, -2.4] * 3
-    # action = robot_interfaces.trifinger.Action(position=position_up)
-    # for _ in range(500):
-    #     t = env.platform.append_desired_action(action)
-    #     env.platform.wait_until_timeindex(t)
+    position_up = [0.5, 1.2, -2.4] * 3
+    action = robot_interfaces.trifinger.Action(position=position_up)
+    for _ in range(500):
+        t = env.platform.append_desired_action(action)
+        env.platform.wait_until_timeindex(t)
 
-    #     # make sure to not exceed the number of allowed actions
-    #     if t >= episode_length - 1:
-    #         return
+        # make sure to not exceed the number of allowed actions
+        if t >= episode_length - 1:
+            return
 
     while not is_done:
         # ctr += 1

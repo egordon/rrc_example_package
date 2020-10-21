@@ -90,7 +90,10 @@ class StateSpacePolicy:
 
         self.t = 0
         self.last_reset_error = 0.
+        self.iterm_reset = 0.
         self.finger = env.sim_platform.simfinger
+        self.iterm_align = 0.
+        self.last_align_error = 0.
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -374,7 +377,9 @@ class StateSpacePolicy:
         if np.linalg.norm(err) < 3 * self.EPS:
             self.state = States.ALIGN
         self.last_reset_error = err
-        return 1.1 * err + 0.001 * delta_err
+        k_i = 0.1
+        self.iterm_reset += err
+        return 1.1 * err + 0.11 * delta_err + 0.0008 * self.iterm_reset
 
     def align(self, observation):
         # Return torque for align step
@@ -389,7 +394,10 @@ class StateSpacePolicy:
         print ("[ALIGN] error: ", err)
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.LOWER
-        return 1.25 * err
+        delta_err = err - self.last_align_error
+        self.iterm_align += err
+        k_i = 0.1
+        return 0.8 * err + 0.1 * delta_err + 0.008 * self.iterm_align
 
     def lower(self, observation):
         # Return torque for lower step

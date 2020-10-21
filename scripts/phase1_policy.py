@@ -371,10 +371,10 @@ class StateSpacePolicy:
         desired = np.array(self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
         err = desired - current
         delta_err = err - self.last_reset_error
-        if np.linalg.norm(err) < 2 * self.EPS:
+        if np.linalg.norm(err) < 5 * self.EPS:
             self.state = States.ALIGN
         self.last_reset_error = err
-        return 1.65 * err + 0.01 * delta_err
+        return 1.7 * err + 0.001 * delta_err
 
     def align(self, observation):
         # Return torque for align step
@@ -389,7 +389,7 @@ class StateSpacePolicy:
         print ("[ALIGN] error: ", err)
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.LOWER
-        return 1.65 * err
+        return 1.75 * err
 
     def lower(self, observation):
         # Return torque for lower step

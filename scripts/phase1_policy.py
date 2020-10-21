@@ -371,7 +371,7 @@ class StateSpacePolicy:
         desired = np.array(self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
         err = desired - current
         delta_err = err - self.last_reset_error
-        if np.linalg.norm(err) < 5 * self.EPS:
+        if np.linalg.norm(err) < 3 * self.EPS:
             self.state = States.ALIGN
         self.last_reset_error = err
         return 1.7 * err + 0.001 * delta_err

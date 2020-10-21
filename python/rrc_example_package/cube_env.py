@@ -292,12 +292,12 @@ class RealRobotCubeEnv(gym.GoalEnv):
             initial_robot_position=initial_robot_position,
             initial_object_pose=dummy_initial_object_pose,
         )
-        self.goal_marker = visual_objects.CubeMarker(
-                width=0.065,
-                position=self.goal["position"],
-                orientation=self.goal["orientation"],
-                physicsClientId=self.sim_platform.simfinger._pybullet_client_id,
-            )
+        # self.goal_marker = visual_objects.CubeMarker(
+        #         width=0.065,
+        #         position=self.goal["position"],
+        #         orientation=self.goal["orientation"],
+        #         physicsClientId=self.sim_platform.simfinger._pybullet_client_id,
+        #     )
 
         # self._reset_direct_simulation()
 

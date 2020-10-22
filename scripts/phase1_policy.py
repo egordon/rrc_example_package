@@ -397,6 +397,7 @@ class StateSpacePolicy:
         delta_err = err - self.last_align_error
         self.iterm_align += err
         k_i = 0.1
+        self.last_align_error = err
         return 1.65 * err + 0.1 * delta_err #+ 0.008 * self.iterm_align
 
     def lower(self, observation):

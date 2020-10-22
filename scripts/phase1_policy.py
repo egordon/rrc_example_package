@@ -534,7 +534,7 @@ class StateSpacePolicy:
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = np.array(torque, dtype=np.float64)
+        ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
         print ("Torque value: ", ret)
         ret = np.clip(ret, -0.396, 0.396)
         return ret

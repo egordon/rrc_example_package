@@ -1,2 +1,0 @@
-export PYTHONNOUSERSITE=True
-conda activate rrc_simulation

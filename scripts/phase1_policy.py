@@ -398,7 +398,7 @@ class StateSpacePolicy:
         self.iterm_align += delta_err
         k_i = 0.1
         self.last_align_error = err
-        return 0.47 * err + 0.16 * self.iterm_align
+        return 0.01 * err #+ 0.16 * self.iterm_align
 
     def lower(self, observation):
         # Return torque for lower step
@@ -534,7 +534,7 @@ class StateSpacePolicy:
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
+        ret = np.array(torque, dtype=np.float64)
         print ("Torque value: ", ret)
         ret = np.clip(ret, -0.396, 0.396)
         return ret

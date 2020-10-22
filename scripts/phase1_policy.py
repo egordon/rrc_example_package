@@ -369,6 +369,7 @@ class StateSpacePolicy:
         return force
 
     def reset(self, observation):
+        print ("[RESET]: ON RESET")
         current = self._get_tip_poses(observation)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         desired = np.array(self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
@@ -380,7 +381,7 @@ class StateSpacePolicy:
         self.last_reset_error = err
         k_i = 0.1
         self.iterm_reset += delta_err
-        return 0.47 * err + 0.0001* delta_err + 0.16 * self.iterm_reset
+        return 1.65 * err #+ 0.0001* delta_err + 0.16 * self.iterm_reset
 
     def align(self, observation):
         # Return torque for align step

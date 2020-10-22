@@ -374,12 +374,12 @@ class StateSpacePolicy:
         desired = np.array(self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
         err = desired - current
         delta_err = err - self.last_reset_error
-        if np.linalg.norm(err) < 3 * self.EPS:
+        if np.linalg.norm(err) < 4 * self.EPS:
             self.state = States.ALIGN
         self.last_reset_error = err
         k_i = 0.1
-        self.iterm_reset += err
-        return 1.1 * err + 0.11 * delta_err + 0.0008 * self.iterm_reset
+        self.iterm_reset += delta_err
+        return 0.47 * err + 0.0001* delta_err + 0.16 * self.iterm_reset
 
     def align(self, observation):
         # Return torque for align step
@@ -395,10 +395,10 @@ class StateSpacePolicy:
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.LOWER
         delta_err = err - self.last_align_error
-        self.iterm_align += err
+        self.iterm_align += delta_err
         k_i = 0.1
         self.last_align_error = err
-        return 1.65 * err + 0.1 * delta_err #+ 0.008 * self.iterm_align
+        return 0.47 * err + 0.16 * self.iterm_align
 
     def lower(self, observation):
         # Return torque for lower step
@@ -412,7 +412,7 @@ class StateSpacePolicy:
         err = desired - current
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.INTO
-        return 0.1 * err
+        return 0.47 * err
 
     def into(self, observation):
         # Return torque for into step
@@ -438,7 +438,7 @@ class StateSpacePolicy:
             self.state = States.GOAL
 
         self.goal_err_sum = np.zeros(9)
-        return 0.1 * err
+        return 0.47 * err
 
     def goal(self, observation):
         # Return torque for goal step
@@ -534,7 +534,7 @@ class StateSpacePolicy:
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = np.array(torque, dtype=np.float64)
+        ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
         print ("Torque value: ", ret)
         ret = np.clip(ret, trifingerpro_limits.robot_torque.low, trifingerpro_limits.robot_torque.high)
         return ret

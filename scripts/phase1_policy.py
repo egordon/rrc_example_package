@@ -536,7 +536,7 @@ class StateSpacePolicy:
 
         ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
         print ("Torque value: ", ret)
-        ret = np.clip(ret, trifingerpro_limits.robot_torque.low, trifingerpro_limits.robot_torque.high)
+        ret = np.clip(ret, -0.36, 0.36)
         return ret
 
 

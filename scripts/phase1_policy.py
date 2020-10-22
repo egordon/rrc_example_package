@@ -401,7 +401,7 @@ class StateSpacePolicy:
         self.iterm_align += delta_err
         k_i = 0.1
         self.last_align_error = err
-        return 3. * err #+ 0.16 * self.iterm_align
+        return 2.7 * err + 0.16 * self.iterm_align
 
     def lower(self, observation):
         # Return torque for lower step

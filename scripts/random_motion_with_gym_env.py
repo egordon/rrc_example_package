@@ -37,6 +37,7 @@ def main():
     accumulated_reward = 0
     while not is_done:
         action = policy.predict(observation)
+        print ("Action: ", action)
         observation, reward, is_done, info = env.step(action)
         print("reward:", reward)
         accumulated_reward += reward

@@ -376,6 +376,7 @@ class StateSpacePolicy:
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 4 * self.EPS:
             self.state = States.ALIGN
+            print ("[RESET]: Switching to ALIGN")
         self.last_reset_error = err
         k_i = 0.1
         self.iterm_reset += delta_err
@@ -391,9 +392,10 @@ class StateSpacePolicy:
                       2, 1.6 * (-0.866), 1.6 * (-0.5), 2])
 
         err = desired - current
-        print ("[ALIGN] error: ", err)
+        # print ("[ALIGN] error: ", err)
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.LOWER
+            print ("[ALIGN]: Switching to LOWER")
         delta_err = err - self.last_align_error
         self.iterm_align += delta_err
         k_i = 0.1
@@ -412,6 +414,7 @@ class StateSpacePolicy:
         err = desired - current
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.INTO
+            print ("[LOWER]: Switching to INTO")
         return 0.47 * err
 
     def into(self, observation):
@@ -419,11 +422,12 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
         current_x = current[0::3]
         difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
-        print ("TIP diff: ", difference)
+        # print ("TIP diff: ", difference)
         if any(y < 0.02 for y in difference):
             self.state = States.ALIGN
+            print ("[INTO]: Switching to ALIGN")
     
-        print ("Current tip pose: ", current)
+        # print ("Current tip pose: ", current)
         desired = np.tile(observation["desired_goal"]["position"], 3)
 
         err = desired - current
@@ -436,6 +440,7 @@ class StateSpacePolicy:
                 switch = False
         if switch:
             self.state = States.GOAL
+            print ("[INTO]: Switching to GOAL")
 
         self.goal_err_sum = np.zeros(9)
         return 0.47 * err
@@ -445,7 +450,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
         current_x = current[0::3]
         difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
-        print ("TIP diff: ", difference)
+        # print ("TIP diff: ", difference)
         # if any(y < 0.02 for y in difference):
         #     self.state = States.ALIGN
         #     return 0.0
@@ -466,6 +471,7 @@ class StateSpacePolicy:
 
         if err_mag < 0.01 and self.difficulty == 4:
             self.state = States.ORIENT
+            print ("[GOAL]: Switching to ORIENT")
         return 0.06 * into_err + 0.12 * goal_err + 0.0008 * self.goal_err_sum
 
     def orient(self, observation):
@@ -504,30 +510,30 @@ class StateSpacePolicy:
         force = np.zeros(9)
 
         if self.do_premanip:
-            print ("do premanip")
+            # print ("do premanip")
             force = self.premanip(observation)
         
         elif self.state == States.RESET:
-            print ("do reset")
+            # print ("do reset")
             force = self.reset(observation)
         elif self.state == States.ALIGN:
-            print ("do align")
+            # print ("do align")
             force = self.align(observation)
 
         elif self.state == States.LOWER:
-            print ("do lower")
+            # print ("do lower")
             force = self.lower(observation)
 
         elif self.state == States.INTO:
-            print ("do into")
+            # print ("do into")
             force = self.into(observation)
 
         elif self.state == States.GOAL:
-            print ("do goal")
+            # print ("do goal")
             force = self.goal(observation)
 
         elif self.state == States.ORIENT:
-            print ("do orient")
+            # print ("do orient")
             force = self.orient(observation)
 
         # force = np.array([0., 0., 0.5, 0., 0., 0.5, 0., 0., 0.5])
@@ -535,7 +541,7 @@ class StateSpacePolicy:
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
         ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
-        print ("Torque value: ", ret)
+        # print ("Torque value: ", ret)
         ret = np.clip(ret, -0.396, 0.396)
         return ret
 

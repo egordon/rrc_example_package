@@ -596,13 +596,13 @@ def main():
     t = env.platform.append_desired_action(zero_torque_action)
     # env.platform.wait_until_timeindex(t)
     while not is_done:
-        ctr += 1
-        if ctr % 50 == 0:
-            action = policy.predict(observation)
-            # action = np.zeros((9))
-            observation, reward, is_done, info = env.step(action)
-            # print("reward:", reward)
-            accumulated_reward += reward
+        # ctr += 1
+        # if ctr % 50 == 0:
+        action = policy.predict(observation)
+        # action = np.zeros((9))
+        observation, reward, is_done, info = env.step(action)
+        # print("reward:", reward)
+        accumulated_reward += reward
 
     print("------")
     print("Accumulated Reward: {:.3f}".format(accumulated_reward))

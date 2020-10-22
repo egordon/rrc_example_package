@@ -416,7 +416,7 @@ class StateSpacePolicy:
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.INTO
             print ("[LOWER]: Switching to INTO")
-        return 0.47 * err
+        return 3. * err
 
     def into(self, observation):
         # Return torque for into step

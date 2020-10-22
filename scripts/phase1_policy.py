@@ -388,7 +388,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3) + \
-            self.CUBE_SIZE * \
+            (self.CUBE_SIZE + 0.01) * \
             np.array([0, 1.6, 2, 1.6 * 0.866, 1.6 * (-0.5),
                       2, 1.6 * (-0.866), 1.6 * (-0.5), 2])
 
@@ -401,7 +401,7 @@ class StateSpacePolicy:
         self.iterm_align += delta_err
         k_i = 0.1
         self.last_align_error = err
-        return 2.7 * err + 0.16 * self.iterm_align
+        return 2.7 * err + 0.01 * self.iterm_align
 
     def lower(self, observation):
         # Return torque for lower step

@@ -424,8 +424,8 @@ class StateSpacePolicy:
         z = self.CUBE_SIZE
         desired = np.tile(np.array([x, y, z]), 3) + \
             (self.CUBE_SIZE + 0.015) * \
-            np.array([0, 1.6, 0.1, 1.6 * 0.866, 1.6 * (-0.5),
-                      0.05, 1.6 * (-0.866), 1.6 * (-0.5), 0.05])
+            np.array([0, 1.6, 0.02, 1.6 * 0.866, 1.6 * (-0.5),
+                      0.02, 1.6 * (-0.866), 1.6 * (-0.5), 0.02])
 
         err = desired - current
         if np.linalg.norm(err) < 2 * self.EPS:
@@ -457,7 +457,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"]
         switch = True
         for f in tip_forces:
-            if f < 0.03:
+            if f < 0.0515:
                 switch = False
         if switch:
             self.state = States.GOAL

@@ -401,11 +401,14 @@ class StateSpacePolicy:
 
         err = desired - current
         # print ("[ALIGN] error: ", err)
-        if np.linalg.norm(err) < 1.0 * self.EPS:
+        if np.linalg.norm(err) < 2.0 * self.EPS:
             self.state = States.LOWER
             print ("[ALIGN]: Switching to LOWER")
             print ("[ALIGN]: K_p ", self.k_p)
             print ("[ALIGN]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.1
+            self.ctr = 0
+
         delta_err = err - self.last_align_error
         self.iterm_align += delta_err
         k_i = 0.1
@@ -425,7 +428,7 @@ class StateSpacePolicy:
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.INTO
             print ("[LOWER]: Switching to INTO")
-        return 3. * err
+        return self.k_p * err
 
     def into(self, observation):
         # Return torque for into step
@@ -453,7 +456,7 @@ class StateSpacePolicy:
             print ("[INTO]: Switching to GOAL")
 
         self.goal_err_sum = np.zeros(9)
-        return 0.47 * err
+        return self.k_p * err
 
     def goal(self, observation):
         # Return torque for goal step
@@ -482,7 +485,7 @@ class StateSpacePolicy:
         if err_mag < 0.01 and self.difficulty == 4:
             self.state = States.ORIENT
             print ("[GOAL]: Switching to ORIENT")
-        return 0.06 * into_err + 0.12 * goal_err + 0.0008 * self.goal_err_sum
+        return 0.1 * into_err + 1.2 * goal_err + 0.008 * self.goal_err_sum
 
     def orient(self, observation):
         # Return torque for lower step
@@ -613,7 +616,7 @@ def main():
 
     while not is_done:
         ctr += 1
-        if ctr % 100 == 0 and policy.ctr < 10:
+        if ctr % 100 == 0 and policy.ctr < 20:
             policy.ctr += 1
             policy.k_p *= 1.2
         # if ctr % 50 == 0:

@@ -395,7 +395,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3) + \
-            (self.CUBE_SIZE) * \
+            (self.CUBE_SIZE + 0.03) * \
             np.array([0, 1.6, 2, 1.6 * 0.866, 1.6 * (-0.5),
                       2, 1.6 * (-0.866), 1.6 * (-0.5), 2])
 

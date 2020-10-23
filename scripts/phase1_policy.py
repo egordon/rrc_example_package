@@ -544,6 +544,8 @@ class StateSpacePolicy:
         ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
         # print ("Torque value: ", ret)
         ret = np.clip(ret, -0.396, 0.396)
+        if self.state == States.ALIGN:
+            ret = np.zeros((9,), dtype=np.float64)
         return ret
 
 
@@ -591,6 +593,10 @@ def main():
     * send zero torque [should fall down]
     * test grav comp [should stay still]
     * test jacobian: send constant force +x for all arms
+
+    * give zero torque after reset
+    * reduce PID for initial phase and tighten the threshold
+    * reset and align
     """
     zero_torque_action = robot_interfaces.trifinger.Action()
     t = env.platform.append_desired_action(zero_torque_action)

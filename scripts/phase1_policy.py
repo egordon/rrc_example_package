@@ -95,6 +95,7 @@ class StateSpacePolicy:
         self.iterm_align = 0.
         self.last_align_error = 0.
         self.k_p = 0.1
+        self.ctr = 0
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -382,6 +383,7 @@ class StateSpacePolicy:
             print ("[RESET]: K_p ", self.k_p)
             print ("[RESET]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.1
+            self.ctr = 0
 
         self.last_reset_error = err
         k_i = 0.1
@@ -608,9 +610,11 @@ def main():
     zero_torque_action = robot_interfaces.trifinger.Action()
     t = env.platform.append_desired_action(zero_torque_action)
     # env.platform.wait_until_timeindex(t)
+
     while not is_done:
         ctr += 1
-        if ctr % 30 == 0:
+        if ctr % 100 == 0 and policy.ctr < 20:
+            policy.ctr += 1
             policy.k_p *= 1.2
         # if ctr % 50 == 0:
         action = policy.predict(observation)

@@ -94,7 +94,7 @@ class StateSpacePolicy:
         self.finger = env.sim_platform.simfinger
         self.iterm_align = 0.
         self.last_align_error = 0.
-        self.k_p = 0.1
+        self.k_p = 0.8
         self.ctr = 0
 
     def _calculate_premanip(self, observation):
@@ -395,13 +395,13 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3) + \
-            (self.CUBE_SIZE + 0.03) * \
-            np.array([0, 1.6, 2, 1.6 * 0.866, 1.6 * (-0.5),
-                      2, 1.6 * (-0.866), 1.6 * (-0.5), 2])
+            (self.CUBE_SIZE + 0.015) * \
+            np.array([0, 1.6, 1.5, 1.6 * 0.866, 1.6 * (-0.5),
+                      1.5, 1.6 * (-0.866), 1.6 * (-0.5), 1.5])
 
         err = desired - current
         # print ("[ALIGN] error: ", err)
-        if np.linalg.norm(err) < 0.1 * self.EPS:
+        if np.linalg.norm(err) < 1.0 * self.EPS:
             self.state = States.LOWER
             print ("[ALIGN]: Switching to LOWER")
             print ("[ALIGN]: K_p ", self.k_p)
@@ -613,7 +613,7 @@ def main():
 
     while not is_done:
         ctr += 1
-        if ctr % 100 == 0 and policy.ctr < 20:
+        if ctr % 100 == 0 and policy.ctr < 10:
             policy.ctr += 1
             policy.k_p *= 1.2
         # if ctr % 50 == 0:

@@ -94,7 +94,7 @@ class StateSpacePolicy:
         self.finger = env.sim_platform.simfinger
         self.iterm_align = 0.
         self.last_align_error = 0.
-        self.k_p = 0.8
+        self.k_p = 0.4
         self.ctr = 0
 
     def _calculate_premanip(self, observation):
@@ -393,7 +393,7 @@ class StateSpacePolicy:
     def align(self, observation):
         # Return torque for align step
         current = self._get_tip_poses(observation)
-
+        observation["achieved_goal"]["position"][2] = 0.0325
         desired = np.tile(observation["achieved_goal"]["position"], 3) + \
             (self.CUBE_SIZE + 0.015) * \
             np.array([0, 1.6, 1.5, 1.6 * 0.866, 1.6 * (-0.5),
@@ -406,7 +406,7 @@ class StateSpacePolicy:
             print ("[ALIGN]: Switching to LOWER")
             print ("[ALIGN]: K_p ", self.k_p)
             print ("[ALIGN]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.1
+            self.k_p = 0.5
             self.ctr = 0
 
         delta_err = err - self.last_align_error
@@ -417,17 +417,22 @@ class StateSpacePolicy:
 
     def lower(self, observation):
         # Return torque for lower step
+        observation["achieved_goal"]["position"][2] = 0.0325
         current = self._get_tip_poses(observation)
-
+        # k_p == max(2.5, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3) + \
-            self.CUBE_SIZE * \
-            np.array([0, 1.6, 0, 1.6 * 0.866, 1.6 * (-0.5),
-                      0, 1.6 * (-0.866), 1.6 * (-0.5), 0])
+            (self.CUBE_SIZE + 0.015) * \
+            np.array([0, 1.6, 0.1, 1.6 * 0.866, 1.6 * (-0.5),
+                      0.05, 1.6 * (-0.866), 1.6 * (-0.5), 0.05])
 
         err = desired - current
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.INTO
             print ("[LOWER]: Switching to INTO")
+            print ("[LOWER]: K_p ", self.k_p)
+            print ("[LOWER]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
         return self.k_p * err
 
     def into(self, observation):
@@ -441,6 +446,7 @@ class StateSpacePolicy:
             print ("[INTO]: Switching to ALIGN")
     
         # print ("Current tip pose: ", current)
+        observation["desired_goal"]["position"][2] = 0.0325
         desired = np.tile(observation["desired_goal"]["position"], 3)
 
         err = desired - current
@@ -537,17 +543,17 @@ class StateSpacePolicy:
             # print ("do lower")
             force = self.lower(observation)
 
-        elif self.state == States.INTO:
-            # print ("do into")
-            force = self.into(observation)
+        # elif self.state == States.INTO:
+        #     # print ("do into")
+        #     force = self.into(observation)
 
-        elif self.state == States.GOAL:
-            # print ("do goal")
-            force = self.goal(observation)
+        # elif self.state == States.GOAL:
+        #     # print ("do goal")
+        #     force = self.goal(observation)
 
-        elif self.state == States.ORIENT:
-            # print ("do orient")
-            force = self.orient(observation)
+        # elif self.state == States.ORIENT:
+        #     # print ("do orient")
+        #     force = self.orient(observation)
 
         # force = np.array([0., 0., 0.5, 0., 0., 0.5, 0., 0., 0.5])
         torque = J.T.dot(np.linalg.solve(

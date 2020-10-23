@@ -94,6 +94,7 @@ class StateSpacePolicy:
         self.finger = env.sim_platform.simfinger
         self.iterm_align = 0.
         self.last_align_error = 0.
+        self.k_p = 0.1
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -375,33 +376,39 @@ class StateSpacePolicy:
         desired = np.array(self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
         err = desired - current
         delta_err = err - self.last_reset_error
-        if np.linalg.norm(err) < 4 * self.EPS:
+        if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.ALIGN
             print ("[RESET]: Switching to ALIGN")
+            print ("[RESET]: K_p ", self.k_p)
+            print ("[RESET]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.1
+
         self.last_reset_error = err
         k_i = 0.1
         self.iterm_reset += delta_err
-        return 1.65 * err #+ 0.0001* delta_err + 0.16 * self.iterm_reset
+        return self.k_p * err #+ 0.0001* delta_err + 0.16 * self.iterm_reset
 
     def align(self, observation):
         # Return torque for align step
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3) + \
-            (self.CUBE_SIZE + 0.01) * \
+            (self.CUBE_SIZE) * \
             np.array([0, 1.6, 2, 1.6 * 0.866, 1.6 * (-0.5),
                       2, 1.6 * (-0.866), 1.6 * (-0.5), 2])
 
         err = desired - current
         # print ("[ALIGN] error: ", err)
-        if np.linalg.norm(err) < 2 * self.EPS:
+        if np.linalg.norm(err) < 0.1 * self.EPS:
             self.state = States.LOWER
             print ("[ALIGN]: Switching to LOWER")
+            print ("[ALIGN]: K_p ", self.k_p)
+            print ("[ALIGN]: Cube pos ", observation['achieved_goal']['position'])
         delta_err = err - self.last_align_error
         self.iterm_align += delta_err
         k_i = 0.1
         self.last_align_error = err
-        return 2.7 * err + 0.01 * self.iterm_align
+        return self.k_p * err # + 0.01 * self.iterm_align
 
     def lower(self, observation):
         # Return torque for lower step
@@ -544,8 +551,8 @@ class StateSpacePolicy:
         ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
         # print ("Torque value: ", ret)
         ret = np.clip(ret, -0.396, 0.396)
-        if self.state == States.ALIGN:
-            ret = np.zeros((9,), dtype=np.float64)
+        # if self.state == States.ALIGN:
+        #     ret = np.zeros((9,), dtype=np.float64)
         return ret
 
 
@@ -602,7 +609,9 @@ def main():
     t = env.platform.append_desired_action(zero_torque_action)
     # env.platform.wait_until_timeindex(t)
     while not is_done:
-        # ctr += 1
+        ctr += 1
+        if ctr % 30 == 0:
+            policy.k_p *= 1.2
         # if ctr % 50 == 0:
         action = policy.predict(observation)
         # action = np.zeros((9))

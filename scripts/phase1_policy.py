@@ -449,7 +449,7 @@ class StateSpacePolicy:
         current_x = current[0::3]
         difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
-        k_p = min(3.5, self.k_p)
+        k_p = min(15.0, self.k_p)
         if any(y < 0.02 for y in difference):
             self.state = States.ALIGN
             print ("[INTO]: Switching to ALIGN")
@@ -469,7 +469,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"] - self.force_offset
         switch = True
         for f in tip_forces:
-            if f < 0.15:
+            if f < 0.1:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -492,7 +492,7 @@ class StateSpacePolicy:
         # if any(y < 0.02 for y in difference):
         #     self.state = States.ALIGN
         #     return 0.0
-        k_p = min(5.0, self.k_p)
+        k_p = min(15.0, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         into_err = desired - current

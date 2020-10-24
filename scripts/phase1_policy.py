@@ -433,6 +433,7 @@ class StateSpacePolicy:
             print ("[LOWER]: Switching to INTO")
             print ("[LOWER]: K_p ", self.k_p)
             print ("[LOWER]: Cube pos ", observation['achieved_goal']['position'])
+            print ("[LOWER]: Current Tip Forces ", observation["observation"]["tip_force"])
             self.k_p = 0.5
             self.ctr = 0
         return self.k_p * err
@@ -458,10 +459,11 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"]
         switch = True
         for f in tip_forces:
-            if f < 0.0515:
+            if f < 1.25:
                 switch = False
         if switch:
             self.state = States.GOAL
+            print ("[INTO] Tip Forces ", tip_forces)
             print ("[INTO]: Switching to GOAL")
             print ("[INTO]: K_p ", self.k_p)
             print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])

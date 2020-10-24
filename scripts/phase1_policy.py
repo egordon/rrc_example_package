@@ -97,7 +97,8 @@ class StateSpacePolicy:
         self.k_p = 0.4
         self.ctr = 0
         self.force_offset = None
-        self.interval = 200
+        self.interval = 100
+        self.gain_increase_factor = 1.2
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -439,6 +440,7 @@ class StateSpacePolicy:
             print ("[LOWER]: Current Tip Forces ", observation["observation"]["tip_force"])
             self.k_p = 0.5
             self.ctr = 0
+            self.gain_increase_factor = 1.1
             self.interval = 500
 
         return self.k_p * err
@@ -479,6 +481,7 @@ class StateSpacePolicy:
             print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.ctr = 0
+            self.interval = 1000
 
         self.goal_err_sum = np.zeros(9)
         return k_p * err
@@ -516,7 +519,7 @@ class StateSpacePolicy:
             self.k_p = 0.5
             self.ctr = 0
 
-        return 1.4 * into_err + k_p * goal_err + 0.008 * self.goal_err_sum
+        return 1.4 * into_err + k_p * goal_err + 0.08 * self.goal_err_sum
 
     def orient(self, observation):
         # Return torque for lower step
@@ -651,7 +654,7 @@ def main():
         ctr += 1
         if ctr % policy.interval == 0 and policy.ctr < 20:
             policy.ctr += 1
-            policy.k_p *= 1.2
+            policy.k_p *= policy.gain_increase_factor
         # if ctr % 50 == 0:
         action = policy.predict(observation)
         # action = np.zeros((9))

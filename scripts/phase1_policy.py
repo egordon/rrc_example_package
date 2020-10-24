@@ -469,7 +469,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"] - self.force_offset
         switch = True
         for f in tip_forces:
-            if f < 0.1:
+            if f < 0.07:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -492,7 +492,7 @@ class StateSpacePolicy:
         # if any(y < 0.02 for y in difference):
         #     self.state = States.ALIGN
         #     return 0.0
-        k_p = min(15.0, self.k_p)
+        k_p = min(6.0, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         into_err = desired - current
@@ -516,7 +516,7 @@ class StateSpacePolicy:
             self.k_p = 0.5
             self.ctr = 0
 
-        return 0.8 * into_err + k_p * goal_err + 0.008 * self.goal_err_sum
+        return 1.4 * into_err + k_p * goal_err + 0.008 * self.goal_err_sum
 
     def orient(self, observation):
         # Return torque for lower step

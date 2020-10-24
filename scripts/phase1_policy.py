@@ -440,8 +440,6 @@ class StateSpacePolicy:
             print ("[LOWER]: Current Tip Forces ", observation["observation"]["tip_force"])
             self.k_p = 0.5
             self.ctr = 0
-            self.gain_increase_factor = 1.1
-            self.interval = 500
 
         return self.k_p * err
 
@@ -481,7 +479,8 @@ class StateSpacePolicy:
             print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.ctr = 0
-            self.interval = 1000
+            self.gain_increase_factor = 1.1
+            self.interval = 300
 
         self.goal_err_sum = np.zeros(9)
         return k_p * err

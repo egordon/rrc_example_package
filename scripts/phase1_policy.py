@@ -599,7 +599,7 @@ episode_length = 2 * 60 * 1000
 def main():
     # the difficulty level and the goal pose (as JSON string) are passed as
     # arguments
-    difficulty = 4
+    difficulty = 3
     goal_pose_json = sys.argv[2]
     # goal = json.loads(goal_pose_json)
     goal_pose = move_cube.sample_goal(1)

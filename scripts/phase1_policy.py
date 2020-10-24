@@ -424,8 +424,8 @@ class StateSpacePolicy:
         z = self.CUBE_SIZE
         desired = np.tile(np.array([x, y, z]), 3) + \
             (self.CUBE_SIZE + 0.015) * \
-            np.array([0, 1.6, 0.02, 1.6 * 0.866, 1.6 * (-0.5),
-                      0.02, 1.6 * (-0.866), 1.6 * (-0.5), 0.02])
+            np.array([0, 1.6, 0.015, 1.6 * 0.866, 1.6 * (-0.5),
+                      0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
 
         err = desired - current
         if np.linalg.norm(err) < 2 * self.EPS:
@@ -448,8 +448,9 @@ class StateSpacePolicy:
             print ("[INTO]: Switching to ALIGN")
     
         # print ("Current tip pose: ", current)
-        observation["desired_goal"]["position"][2] = 0.0325
-        desired = np.tile(observation["desired_goal"]["position"], 3)
+        x, y = observation["achieved_goal"]["position"][:2]
+        z = self.CUBE_SIZE
+        desired = np.tile(np.array([x, y, z]), 3)
 
         err = desired - current
 
@@ -462,6 +463,10 @@ class StateSpacePolicy:
         if switch:
             self.state = States.GOAL
             print ("[INTO]: Switching to GOAL")
+            print ("[INTO]: K_p ", self.k_p)
+            print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
 
         self.goal_err_sum = np.zeros(9)
         return self.k_p * err
@@ -493,7 +498,7 @@ class StateSpacePolicy:
         if err_mag < 0.01 and self.difficulty == 4:
             self.state = States.ORIENT
             print ("[GOAL]: Switching to ORIENT")
-        return 0.1 * into_err + 1.2 * goal_err + 0.008 * self.goal_err_sum
+        return 0.4 * into_err + 1.7 * goal_err + 0.008 * self.goal_err_sum
 
     def orient(self, observation):
         # Return torque for lower step
@@ -545,9 +550,9 @@ class StateSpacePolicy:
             # print ("do lower")
             force = self.lower(observation)
 
-        # elif self.state == States.INTO:
-        #     # print ("do into")
-        #     force = self.into(observation)
+        elif self.state == States.INTO:
+            # print ("do into")
+            force = self.into(observation)
 
         # elif self.state == States.GOAL:
         #     # print ("do goal")

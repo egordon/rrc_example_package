@@ -96,6 +96,7 @@ class StateSpacePolicy:
         self.last_align_error = 0.
         self.k_p = 0.4
         self.ctr = 0
+        self.force_offset = None
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -371,7 +372,7 @@ class StateSpacePolicy:
         return force
 
     def reset(self, observation):
-        print ("[RESET]: ON RESET")
+        # print ("[RESET]: ON RESET")
         current = self._get_tip_poses(observation)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         desired = np.array(self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
@@ -382,6 +383,7 @@ class StateSpacePolicy:
             print ("[RESET]: Switching to ALIGN")
             print ("[RESET]: K_p ", self.k_p)
             print ("[RESET]: Cube pos ", observation['achieved_goal']['position'])
+            self.force_offset = observation["observation"]["tip_force"]
             self.k_p = 0.1
             self.ctr = 0
 
@@ -447,6 +449,10 @@ class StateSpacePolicy:
         if any(y < 0.02 for y in difference):
             self.state = States.ALIGN
             print ("[INTO]: Switching to ALIGN")
+            print ("[INTO]: K_p ", self.k_p)
+            print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
     
         # print ("Current tip pose: ", current)
         x, y = observation["achieved_goal"]["position"][:2]
@@ -456,10 +462,10 @@ class StateSpacePolicy:
         err = desired - current
 
         # Read Tip Force
-        tip_forces = observation["observation"]["tip_force"]
+        tip_forces = observation["observation"]["tip_force"] - self.force_offset
         switch = True
         for f in tip_forces:
-            if f < 1.25:
+            if f < 0.15:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -631,7 +637,7 @@ def main():
 
     while not is_done:
         ctr += 1
-        if ctr % 100 == 0 and policy.ctr < 20:
+        if ctr % 200 == 0 and policy.ctr < 20:
             policy.ctr += 1
             policy.k_p *= 1.2
         # if ctr % 50 == 0:

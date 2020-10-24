@@ -562,9 +562,9 @@ class StateSpacePolicy:
             # print ("do into")
             force = self.into(observation)
 
-        # elif self.state == States.GOAL:
-        #     # print ("do goal")
-        #     force = self.goal(observation)
+        elif self.state == States.GOAL:
+            # print ("do goal")
+            force = self.goal(observation)
 
         # elif self.state == States.ORIENT:
         #     # print ("do orient")

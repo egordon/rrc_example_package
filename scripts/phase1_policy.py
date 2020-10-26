@@ -477,7 +477,7 @@ class StateSpacePolicy:
             print ("[INTO]: Switching to GOAL")
             print ("[INTO]: K_p ", self.k_p)
             print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 2.0
+            self.k_p = 1.2
             self.ctr = 0
             self.gain_increase_factor = 1.1
             self.interval = 2000
@@ -494,7 +494,7 @@ class StateSpacePolicy:
         # if any(y < 0.02 for y in difference):
         #     self.state = States.ALIGN
         #     return 0.0
-        k_p = min(10.0, self.k_p)
+        k_p = min(2.5, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         into_err = desired - current

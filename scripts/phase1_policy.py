@@ -469,7 +469,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"] - self.force_offset
         switch = True
         for f in tip_forces:
-            if f < 0.07:
+            if f < 0.1:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -518,7 +518,7 @@ class StateSpacePolicy:
             self.k_p = 0.5
             self.ctr = 0
 
-        return 1.4 * into_err + k_p * goal_err + 0.08 * self.goal_err_sum
+        return k_p * goal_err #+ 0.08 * self.goal_err_sum + 1.4 * into_err
 
     def orient(self, observation):
         # Return torque for lower step

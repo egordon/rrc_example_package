@@ -477,7 +477,7 @@ class StateSpacePolicy:
             print ("[INTO]: Switching to GOAL")
             print ("[INTO]: K_p ", self.k_p)
             print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            # self.k_p = 0.5
+            self.k_p = 2.0
             self.ctr = 0
             self.gain_increase_factor = 1.1
             self.interval = 2000

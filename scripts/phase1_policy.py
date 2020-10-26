@@ -469,7 +469,7 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"] - self.force_offset
         switch = True
         for f in tip_forces:
-            if f < 0.1:
+            if f < 0.07:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -480,7 +480,7 @@ class StateSpacePolicy:
             # self.k_p = 0.5
             self.ctr = 0
             self.gain_increase_factor = 1.1
-            self.interval = 300
+            self.interval = 2000
 
         self.goal_err_sum = np.zeros(9)
         return k_p * err

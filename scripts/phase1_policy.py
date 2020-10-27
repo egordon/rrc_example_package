@@ -534,6 +534,12 @@ class StateSpacePolicy:
             print ("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.ctr = 0
+        
+        if err_mag < 0.01:
+            self.state = States.ORIENT
+            print ("[GOAL]: Goal state achieved")
+            print ("[GOAL]: K_p ", self.k_p)
+            self.ctr = 0
 
         return k_p * goal_err + 0.4 * into_err + 0.008 * self.goal_err_sum 
 

@@ -481,7 +481,7 @@ class StateSpacePolicy:
             print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.8
             self.ctr = 0
-            self.gain_increase_factor = 1.08
+            self.gain_increase_factor = 1.0
             self.interval = 4000
 
         self.goal_err_sum = np.zeros(9)

@@ -482,8 +482,8 @@ class StateSpacePolicy:
             print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
-            self.gain_increase_factor = 1.0
-            self.interval = 4000
+            self.gain_increase_factor = 1.08
+            self.interval = 2500
 
         self.goal_err_sum = np.zeros(9)
         return k_p * err
@@ -514,9 +514,9 @@ class StateSpacePolicy:
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
         
-        if time.time() - self.goal_begin_time > 15.0:
-            self.state = States.ALIGN
-            print ("[GOAL]: Switching to ALIGN")
+        if time.time() - self.goal_begin_time > 25.0:
+            self.state = States.RESET
+            print ("[GOAL]: Switching to RESET")
             print ("[GOAL]: K_p ", self.k_p)
             print ("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5

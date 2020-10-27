@@ -453,7 +453,7 @@ class StateSpacePolicy:
         difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
         k_p = min(15.0, self.k_p)
-        if any(y < 0.02 for y in difference):
+        if any(y < 0.004 for y in difference):
             self.state = States.ALIGN
             print ("[INTO]: Switching to ALIGN")
             print ("[INTO]: K_p ", self.k_p)

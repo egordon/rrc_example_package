@@ -453,7 +453,7 @@ class StateSpacePolicy:
         difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
         k_p = min(15.0, self.k_p)
-        if any(y < 0.004 for y in difference):
+        if any(y < 0.001 for y in difference):
             self.state = States.ALIGN
             print ("[INTO]: Switching to ALIGN")
             print ("[INTO]: K_p ", self.k_p)
@@ -480,7 +480,7 @@ class StateSpacePolicy:
             print ("[INTO]: Switching to GOAL")
             print ("[INTO]: K_p ", self.k_p)
             print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.8
+            self.k_p = 0.65
             self.ctr = 0
             self.gain_increase_factor = 1.0
             self.interval = 4000
@@ -535,7 +535,7 @@ class StateSpacePolicy:
             self.k_p = 0.5
             self.ctr = 0
 
-        return k_p * goal_err + 0.6 * into_err #+ 0.08 * self.goal_err_sum 
+        return k_p * goal_err + 0.4 * into_err #+ 0.08 * self.goal_err_sum 
 
     def orient(self, observation):
         # Return torque for lower step

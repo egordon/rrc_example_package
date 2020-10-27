@@ -535,7 +535,7 @@ class StateSpacePolicy:
             self.k_p = 0.5
             self.ctr = 0
 
-        return k_p * goal_err + 0.4 * into_err + 0.08 * self.goal_err_sum 
+        return k_p * goal_err + 0.4 * into_err + 0.008 * self.goal_err_sum 
 
     def orient(self, observation):
         # Return torque for lower step

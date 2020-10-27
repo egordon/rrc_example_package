@@ -101,6 +101,7 @@ class StateSpacePolicy:
         self.interval = 100
         self.gain_increase_factor = 1.2
         self.start_time = None
+        self.goal_begin_time = None
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -489,6 +490,8 @@ class StateSpacePolicy:
 
     def goal(self, observation):
         # Return torque for goal step
+        if self.goal_begin_time is None:
+            self.goal_begin_time = time.time()
         current = self._get_tip_poses(observation)
         current_x = current[0::3]
         difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
@@ -511,7 +514,7 @@ class StateSpacePolicy:
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
         
-        if err_mag > 0.12:
+        if time.time() - self.goal_begin_time > 15.0:
             self.state = States.ALIGN
             print ("[GOAL]: Switching to ALIGN")
             print ("[GOAL]: K_p ", self.k_p)
@@ -520,6 +523,8 @@ class StateSpacePolicy:
             self.interval = 100
             self.gain_increase_factor = 1.2
             self.ctr = 0
+            self.goal_begin_time = None
+        # if err_mag > 0.12:
 
         print ("[GOAL] Error magnitude ", err_mag, " K_p ", k_p, " time: ", time.time() - self.start_time)
         if err_mag < 0.01 and self.difficulty == 4:

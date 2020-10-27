@@ -517,6 +517,8 @@ class StateSpacePolicy:
             print ("[GOAL]: K_p ", self.k_p)
             print ("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
+            self.interval = 100
+            self.gain_increase_factor = 1.2
             self.ctr = 0
 
         print ("[GOAL] Error magnitude ", err_mag, " K_p ", k_p, " time: ", time.time() - self.start_time)

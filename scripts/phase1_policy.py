@@ -85,8 +85,8 @@ class StateSpacePolicy:
 
         if difficulty == 4:
             # Do Pre-manpulation
-            self.do_premanip = True
-            self._calculate_premanip(observation)
+            self.do_premanip = False
+            # self._calculate_premanip(observation)
         else:
             self.do_premanip = False
             # self._calculate_premanip(observation)
@@ -544,13 +544,13 @@ class StateSpacePolicy:
         if err_mag > 0.015:
             self.goal_reached = False
 
-        if err_mag < 0.01 and self.difficulty == 4:
-            self.state = States.ORIENT
-            print("[GOAL]: Switching to ORIENT")
-            print("[GOAL]: K_p ", self.k_p)
-            print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.5
-            self.ctr = 0
+        # if err_mag < 0.01 and self.difficulty == 4:
+        #     self.state = States.ORIENT
+        #     print("[GOAL]: Switching to ORIENT")
+        #     print("[GOAL]: K_p ", self.k_p)
+        #     print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
+        #     self.k_p = 0.5
+        #     self.ctr = 0
 
         if err_mag < 0.01:
             self.success_ctr += 1
@@ -651,10 +651,6 @@ class StateSpacePolicy:
         elif self.state == States.GOAL:
             # print ("do goal")
             force = self.goal(observation)
-
-        elif self.state == States.HOLD:
-            # print ("do goal")
-            force = self.hold(observation)
 
         # elif self.state == States.ORIENT:
         #     # print ("do orient")

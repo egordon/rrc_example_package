@@ -550,18 +550,19 @@ class StateSpacePolicy:
         if err_mag < 0.01:
             self.success_ctr += 1
 
-        if err_mag < 0.01 and self.success_ctr > 20 and self.difficulty in [2, 3]:
-            self.state = States.HOLD
-            print("[GOAL]: Goal state achieved")
-            print("[GOAL]: Switching to HOLD")
-            print("[GOAL]: K_p ", self.k_p)
-            self.ctr = 0
+        # if err_mag < 0.01 and self.success_ctr > 20 and self.difficulty in [2, 3]:
+        #     self.state = States.HOLD
+        #     print("[GOAL]: Goal state achieved")
+        #     print("[GOAL]: Switching to HOLD")
+        #     print("[GOAL]: K_p ", self.k_p)
+        #     self.ctr = 0
 
         elif err_mag < 0.01 and self.success_ctr > 20:
-            self.state = States.ORIENT
+            # self.state = States.ORIENT
             print("[GOAL]: Goal state achieved")
             print("[GOAL]: K_p ", self.k_p)
             self.ctr = 0
+            self.gain_increase_factor = 1.0
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 

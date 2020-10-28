@@ -550,7 +550,7 @@ class StateSpacePolicy:
         if err_mag < 0.01:
             self.success_ctr += 1
 
-        if err_mag < 0.01 and self.success_ctr > 20 and difficulty in [2, 3]:
+        if err_mag < 0.01 and self.success_ctr > 20 and self.difficulty in [2, 3]:
             self.state = States.HOLD
             print("[GOAL]: Goal state achieved")
             print("[GOAL]: Switching to HOLD")

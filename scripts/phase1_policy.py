@@ -104,6 +104,7 @@ class StateSpacePolicy:
         self.gain_increase_factor = 1.2
         self.start_time = None
         self.goal_begin_time = None
+        self.goal_reached = False
         # to avoid completion because of error in cube position
         self.success_ctr = 0
 
@@ -525,7 +526,7 @@ class StateSpacePolicy:
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
 
-        if time.time() - self.goal_begin_time > 30.0:
+        if not self.goal_reached and time.time() - self.goal_begin_time > 30.0:
             self.state = States.RESET
             print("[GOAL]: Switching to RESET")
             print("[GOAL]: K_p ", self.k_p)
@@ -535,10 +536,10 @@ class StateSpacePolicy:
             self.gain_increase_factor = 1.2
             self.ctr = 0
             self.goal_begin_time = None
-        # if err_mag > 0.12:
 
         print("[GOAL] Error magnitude ", err_mag, " K_p ",
               k_p, " time: ", time.time() - self.start_time)
+
         if err_mag < 0.01 and self.difficulty == 4:
             self.state = States.ORIENT
             print("[GOAL]: Switching to ORIENT")
@@ -557,10 +558,11 @@ class StateSpacePolicy:
         #     print("[GOAL]: K_p ", self.k_p)
         #     self.ctr = 0
 
-        elif err_mag < 0.01 and self.success_ctr > 20:
+        if err_mag < 0.01 and self.success_ctr > 20:
             # self.state = States.ORIENT
             print("[GOAL]: Goal state achieved")
             print("[GOAL]: K_p ", self.k_p)
+            self.goal_reached = True
             self.ctr = 0
             self.gain_increase_factor = 1.0
 

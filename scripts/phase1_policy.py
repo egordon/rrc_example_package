@@ -523,7 +523,7 @@ class StateSpacePolicy:
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
 
-        if time.time() - self.goal_begin_time > 20.0:
+        if time.time() - self.goal_begin_time > 30.0:
             self.state = States.RESET
             print("[GOAL]: Switching to RESET")
             print("[GOAL]: K_p ", self.k_p)
@@ -554,7 +554,7 @@ class StateSpacePolicy:
             print("[GOAL]: K_p ", self.k_p)
             self.ctr = 0
 
-        return k_p * goal_err + 0.4 * into_err + 0.005 * self.goal_err_sum
+        return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 
     def orient(self, observation):
         # Return torque for lower step

@@ -38,6 +38,8 @@ class States(enum.Enum):
     #: Orient correctly
     ORIENT = enum.auto()
 
+    HOLD = enum.auto()
+
 
 def _quat_mult(q1, q2):
     x0, y0, z0, w0 = q2
@@ -548,13 +550,41 @@ class StateSpacePolicy:
         if err_mag < 0.01:
             self.success_ctr += 1
 
-        if err_mag < 0.01 and self.success_ctr > 20:
+        if err_mag < 0.01 and self.success_ctr > 20 and difficulty in [2, 3]:
+            self.state = States.HOLD
+            print("[GOAL]: Goal state achieved")
+            print("[GOAL]: Switching to HOLD")
+            print("[GOAL]: K_p ", self.k_p)
+            self.ctr = 0
+        elif err_mag < 0.01 and self.success_ctr > 20:
             self.state = States.ORIENT
             print("[GOAL]: Goal state achieved")
             print("[GOAL]: K_p ", self.k_p)
             self.ctr = 0
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
+
+    def hold(self, observation):
+        # Return torque for into step
+        current = self._get_tip_poses(observation)
+        current_x = current[0::3]
+        difference = [abs(p1 - p2)
+                      for p1 in current_x for p2 in current_x if p1 != p2]
+
+        # k_p = min(15.0, self.k_p)
+        if any(y < 0.0001 for y in difference):
+            self.state = States.RESET
+            print("[HOLD]: Switching to RESET")
+            print("[HOLD]: K_p ", self.k_p)
+            print("[HOLD]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
+
+        desired = np.tile(observation["achieved_goal"]["position"], 3)
+
+        err = desired - current
+        err_hat = err / np.linalg.norm(err_hat)
+        return 0.8 * err
 
     def orient(self, observation):
         # Return torque for lower step
@@ -614,6 +644,10 @@ class StateSpacePolicy:
             # print ("do goal")
             force = self.goal(observation)
 
+        elif self.state == States.HOLD:
+            # print ("do goal")
+            force = self.hold(observation)
+
         # elif self.state == States.ORIENT:
         #     # print ("do orient")
         #     force = self.orient(observation)
@@ -638,7 +672,7 @@ episode_length = 2 * 60 * 1000
 def main():
     # the difficulty level and the goal pose (as JSON string) are passed as
     # arguments
-    difficulty = 3
+    difficulty = 2
     goal_pose_json = sys.argv[2]
     # goal = json.loads(goal_pose_json)
     goal_pose = move_cube.sample_goal(difficulty)

@@ -102,6 +102,8 @@ class StateSpacePolicy:
         self.gain_increase_factor = 1.2
         self.start_time = None
         self.goal_begin_time = None
+        # to avoid completion because of error in cube position
+        self.success_ctr = 0
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -158,11 +160,13 @@ class StateSpacePolicy:
     def _get_gravcomp(self, observation):
         # Returns: 9 torques required for grav comp
         ret2 = pybullet.calculateInverseDynamics(self.finger.finger_id,
-                                                observation["observation"]["position"].tolist(
-                                                ),
-                                                observation["observation"]["velocity"].tolist(),
-                                                np.zeros(len(observation["observation"]["position"])).tolist(),
-                                                self.finger._pybullet_client_id)
+                                                 observation["observation"]["position"].tolist(
+                                                 ),
+                                                 observation["observation"]["velocity"].tolist(
+                                                 ),
+                                                 np.zeros(
+                                                     len(observation["observation"]["position"])).tolist(),
+                                                 self.finger._pybullet_client_id)
 
         # ret = pybullet.calculateInverseDynamics(self.finger.finger_id,
         #                                         observation["observation"]["position"].tolist(
@@ -243,7 +247,7 @@ class StateSpacePolicy:
     def preinto(self, observation):
         # Return torque for into step
         current = self._get_tip_poses(observation)
-        
+
         desired = np.tile(observation["achieved_goal"]["position"], 3)
         desired[3*self.manip_arm+2] += 0.4*self.CUBE_SIZE
 
@@ -351,23 +355,23 @@ class StateSpacePolicy:
         force = np.zeros(9)
 
         if self.state == States.ALIGN:
-            print ("do prealign")
+            print("do prealign")
             force = self.prealign(observation)
 
         elif self.state == States.LOWER:
-            print ("do prelower")
+            print("do prelower")
             force = self.prelower(observation)
 
         elif self.state == States.INTO:
-            print ("do preinto")
+            print("do preinto")
             force = self.preinto(observation)
 
         elif self.state == States.GOAL:
-            print ("do pregoal")
+            print("do pregoal")
             force = self.pregoal(observation)
 
         elif self.state == States.ORIENT:
-            print ("do preorient")
+            print("do preorient")
             force = self.preorient(observation)
 
         if self.manip_angle == 0:
@@ -380,14 +384,15 @@ class StateSpacePolicy:
         # print ("[RESET]: ON RESET")
         current = self._get_tip_poses(observation)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
-        desired = np.array(self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+        desired = np.array(
+            self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
         err = desired - current
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.ALIGN
-            print ("[RESET]: Switching to ALIGN")
-            print ("[RESET]: K_p ", self.k_p)
-            print ("[RESET]: Cube pos ", observation['achieved_goal']['position'])
+            print("[RESET]: Switching to ALIGN")
+            print("[RESET]: K_p ", self.k_p)
+            print("[RESET]: Cube pos ", observation['achieved_goal']['position'])
             self.force_offset = observation["observation"]["tip_force"]
             self.k_p = 0.1
             self.ctr = 0
@@ -395,7 +400,7 @@ class StateSpacePolicy:
         self.last_reset_error = err
         k_i = 0.1
         self.iterm_reset += delta_err
-        return self.k_p * err #+ 0.0001* delta_err + 0.16 * self.iterm_reset
+        return self.k_p * err  # + 0.0001* delta_err + 0.16 * self.iterm_reset
 
     def align(self, observation):
         # Return torque for align step
@@ -411,9 +416,9 @@ class StateSpacePolicy:
         # print ("[ALIGN] error: ", err)
         if np.linalg.norm(err) < 2.0 * self.EPS:
             self.state = States.LOWER
-            print ("[ALIGN]: Switching to LOWER")
-            print ("[ALIGN]: K_p ", self.k_p)
-            print ("[ALIGN]: Cube pos ", observation['achieved_goal']['position'])
+            print("[ALIGN]: Switching to LOWER")
+            print("[ALIGN]: K_p ", self.k_p)
+            print("[ALIGN]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.ctr = 0
 
@@ -421,12 +426,12 @@ class StateSpacePolicy:
         self.iterm_align += delta_err
         k_i = 0.1
         self.last_align_error = err
-        return self.k_p * err # + 0.01 * self.iterm_align
+        return self.k_p * err  # + 0.01 * self.iterm_align
 
     def lower(self, observation):
         # Return torque for lower step
         current = self._get_tip_poses(observation)
-        
+
         x, y = observation["achieved_goal"]["position"][:2]
         z = self.CUBE_SIZE
         desired = np.tile(np.array([x, y, z]), 3) + \
@@ -437,10 +442,11 @@ class StateSpacePolicy:
         err = desired - current
         if np.linalg.norm(err) < 2 * self.EPS:
             self.state = States.INTO
-            print ("[LOWER]: Switching to INTO")
-            print ("[LOWER]: K_p ", self.k_p)
-            print ("[LOWER]: Cube pos ", observation['achieved_goal']['position'])
-            print ("[LOWER]: Current Tip Forces ", observation["observation"]["tip_force"])
+            print("[LOWER]: Switching to INTO")
+            print("[LOWER]: K_p ", self.k_p)
+            print("[LOWER]: Cube pos ", observation['achieved_goal']['position'])
+            print("[LOWER]: Current Tip Forces ",
+                  observation["observation"]["tip_force"])
             self.k_p = 0.5
             self.ctr = 0
 
@@ -450,17 +456,18 @@ class StateSpacePolicy:
         # Return torque for into step
         current = self._get_tip_poses(observation)
         current_x = current[0::3]
-        difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
+        difference = [abs(p1 - p2)
+                      for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
         k_p = min(15.0, self.k_p)
-        if any(y < 0.001 for y in difference):
-            self.state = States.ALIGN
-            print ("[INTO]: Switching to ALIGN")
-            print ("[INTO]: K_p ", self.k_p)
-            print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+        if any(y < 0.0001 for y in difference):
+            self.state = States.RESET
+            print("[INTO]: Switching to RESET")
+            print("[INTO]: K_p ", self.k_p)
+            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.ctr = 0
-    
+
         # print ("Current tip pose: ", current)
         x, y = observation["achieved_goal"]["position"][:2]
         z = self.CUBE_SIZE
@@ -469,17 +476,18 @@ class StateSpacePolicy:
         err = desired - current
 
         # Read Tip Force
-        tip_forces = observation["observation"]["tip_force"] - self.force_offset
+        tip_forces = observation["observation"]["tip_force"] - \
+            self.force_offset
         switch = True
         for f in tip_forces:
             if f < 0.1:
                 switch = False
         if switch:
             self.state = States.GOAL
-            print ("[INTO] Tip Forces ", observation["observation"]["tip_force"])
-            print ("[INTO]: Switching to GOAL")
-            print ("[INTO]: K_p ", self.k_p)
-            print ("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
+            print("[INTO]: Switching to GOAL")
+            print("[INTO]: K_p ", self.k_p)
+            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
             self.gain_increase_factor = 1.08
@@ -494,7 +502,8 @@ class StateSpacePolicy:
             self.goal_begin_time = time.time()
         current = self._get_tip_poses(observation)
         current_x = current[0::3]
-        difference = [abs(p1 - p2) for p1 in current_x for p2 in current_x if p1 != p2]
+        difference = [abs(p1 - p2)
+                      for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
         # if any(y < 0.02 for y in difference):
         #     self.state = States.ALIGN
@@ -513,12 +522,12 @@ class StateSpacePolicy:
 
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
-        
-        if time.time() - self.goal_begin_time > 40.0:
+
+        if time.time() - self.goal_begin_time > 20.0:
             self.state = States.RESET
-            print ("[GOAL]: Switching to RESET")
-            print ("[GOAL]: K_p ", self.k_p)
-            print ("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            print("[GOAL]: Switching to RESET")
+            print("[GOAL]: K_p ", self.k_p)
+            print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.interval = 100
             self.gain_increase_factor = 1.2
@@ -526,22 +535,26 @@ class StateSpacePolicy:
             self.goal_begin_time = None
         # if err_mag > 0.12:
 
-        print ("[GOAL] Error magnitude ", err_mag, " K_p ", k_p, " time: ", time.time() - self.start_time)
+        print("[GOAL] Error magnitude ", err_mag, " K_p ",
+              k_p, " time: ", time.time() - self.start_time)
         if err_mag < 0.01 and self.difficulty == 4:
             self.state = States.ORIENT
-            print ("[GOAL]: Switching to ORIENT")
-            print ("[GOAL]: K_p ", self.k_p)
-            print ("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            print("[GOAL]: Switching to ORIENT")
+            print("[GOAL]: K_p ", self.k_p)
+            print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.ctr = 0
-        
+
         if err_mag < 0.01:
+            self.success_ctr += 1
+
+        if err_mag < 0.01 and self.success_ctr > 20:
             self.state = States.ORIENT
-            print ("[GOAL]: Goal state achieved")
-            print ("[GOAL]: K_p ", self.k_p)
+            print("[GOAL]: Goal state achieved")
+            print("[GOAL]: K_p ", self.k_p)
             self.ctr = 0
 
-        return k_p * goal_err + 0.4 * into_err + 0.008 * self.goal_err_sum 
+        return k_p * goal_err + 0.4 * into_err + 0.005 * self.goal_err_sum
 
     def orient(self, observation):
         # Return torque for lower step
@@ -581,7 +594,7 @@ class StateSpacePolicy:
         if self.do_premanip:
             # print ("do premanip")
             force = self.premanip(observation)
-        
+
         elif self.state == States.RESET:
             # print ("do reset")
             force = self.reset(observation)
@@ -609,7 +622,8 @@ class StateSpacePolicy:
         torque = J.T.dot(np.linalg.solve(
             J.dot(J.T) + self.DAMP * np.eye(9), force))
 
-        ret = np.array(torque + self._get_gravcomp(observation), dtype=np.float64)
+        ret = np.array(torque + self._get_gravcomp(observation),
+                       dtype=np.float64)
         # print ("Torque value: ", ret)
         ret = np.clip(ret, -0.396, 0.396)
         # if self.state == States.ALIGN:
@@ -628,7 +642,8 @@ def main():
     goal_pose_json = sys.argv[2]
     # goal = json.loads(goal_pose_json)
     goal_pose = move_cube.sample_goal(1)
-    goal = {'position': goal_pose.position, 'orientation': goal_pose.orientation}
+    goal = {'position': goal_pose.position,
+            'orientation': goal_pose.orientation}
     print(
         "Goal: %s/%s (difficulty: %d)"
         % (goal["position"], goal["orientation"], difficulty)

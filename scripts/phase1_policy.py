@@ -556,6 +556,7 @@ class StateSpacePolicy:
             print("[GOAL]: Switching to HOLD")
             print("[GOAL]: K_p ", self.k_p)
             self.ctr = 0
+
         elif err_mag < 0.01 and self.success_ctr > 20:
             self.state = States.ORIENT
             print("[GOAL]: Goal state achieved")
@@ -584,7 +585,7 @@ class StateSpacePolicy:
 
         err = desired - current
         err_hat = err / np.linalg.norm(err)
-        return 0.8 * 0.2 * err_hat
+        return 0.04 * err_hat
 
     def orient(self, observation):
         # Return torque for lower step

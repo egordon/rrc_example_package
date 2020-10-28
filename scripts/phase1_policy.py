@@ -583,7 +583,7 @@ class StateSpacePolicy:
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         err = desired - current
-        err_hat = err / np.linalg.norm(err_hat)
+        err_hat = err / np.linalg.norm(err)
         return 0.8 * 0.2 * err_hat
 
     def orient(self, observation):

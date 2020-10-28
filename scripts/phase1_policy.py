@@ -584,7 +584,7 @@ class StateSpacePolicy:
 
         err = desired - current
         err_hat = err / np.linalg.norm(err_hat)
-        return 0.8 * 0.2 * err
+        return 0.8 * 0.2 * err_hat
 
     def orient(self, observation):
         # Return torque for lower step

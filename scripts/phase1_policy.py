@@ -612,7 +612,7 @@ class StateSpacePolicy:
             np.cross(into_err[6:] / np.linalg.norm(into_err[6:]), axis)
 
         print ("[ORIENT] Angle err: ", ang_err, " Goal err: ", goal_err)
-        return 0.04 * into_err + 0.11 * goal_err + 0.0004 * self.goal_err_sum + 0.006 * ang_err
+        return 0.25 * into_err + 0.4 * goal_err + 0.001 * self.goal_err_sum + 0.06 * ang_err
 
     def predict(self, observation):
         # Get Jacobians

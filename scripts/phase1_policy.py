@@ -105,8 +105,11 @@ class StateSpacePolicy:
         self.interval = 100
         self.gain_increase_factor = 1.2
         self.start_time = None
+
         self.goal_begin_time = None
+        self.ori_begin_time = None
         self.goal_reached = False
+        self.ori_done = False
         # to avoid completion because of error in cube position
         self.success_ctr = 0
 
@@ -560,12 +563,12 @@ class StateSpacePolicy:
             print("[GOAL]: Goal position achieved")
             print("[GOAL]: K_p ", self.k_p)
             self.goal_reached = True
-            self.ctr = 0
             if self.state == States.GOAL:
                 self.gain_increase_factor = 1.0
             else:
+                self.ctr = 0
                 self.gain_increase_factor = 1.1
-                self.interval = 200
+                self.interval = 400
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 
@@ -593,6 +596,9 @@ class StateSpacePolicy:
 
     def orient(self, observation):
         # Return torque for lower step
+        if self.ori_begin_time is None:
+            self.ori_begin_time = time.time()
+
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
@@ -603,6 +609,17 @@ class StateSpacePolicy:
         goal = np.tile(observation["desired_goal"]["position"], 3)
         goal_err = goal - desired
         err_mag = np.linalg.norm(goal_err[:3])
+
+        if not self.ori_done and time.time() - self.ori_begin_time > 40.0:
+            self.state = States.RESET
+            print("[ORIENT]: Switching to RESET")
+            print("[ORIENT]: K_p ", self.k_p)
+            print("[ORIENT]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.interval = 100
+            self.gain_increase_factor = 1.2
+            self.ctr = 0
+            self.ori_begin_time = None
 
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
@@ -649,7 +666,7 @@ class StateSpacePolicy:
         elif self.state == States.GOAL:
             # print ("do goal")
             force = self.goal(observation)
-
+ 
         elif self.state == States.ORIENT:
         #     # print ("do orient")
             force = self.orient(observation)
@@ -726,7 +743,7 @@ def main():
     policy.start_time = time.time()
     while not is_done:
         ctr += 1
-        if ctr % policy.interval == 0 and policy.ctr < 20:
+        if ctr % policy.interval == 0 and policy.ctr < 60:
             policy.ctr += 1
             policy.k_p *= policy.gain_increase_factor
             if policy.state == States.ORIENT:

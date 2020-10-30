@@ -98,7 +98,7 @@ class StateSpacePolicy:
         self.iterm_align = 0.
         self.last_align_error = 0.
         self.k_p = 0.4
-        self.k_p_goal = 0.25
+        self.k_p_goal = 0.3
         self.k_p_ang = 0.0005
         self.ctr = 0
         self.force_offset = None
@@ -564,8 +564,8 @@ class StateSpacePolicy:
             if self.state == States.GOAL:
                 self.gain_increase_factor = 1.0
             else:
-                self.gain_increase_factor = 1.2
-                self.interval = 2000
+                self.gain_increase_factor = 1.6
+                self.interval = 1200
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 

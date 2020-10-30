@@ -507,10 +507,7 @@ class StateSpacePolicy:
         current_x = current[0::3]
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
-        # print ("TIP diff: ", difference)
-        # if any(y < 0.02 for y in difference):
-        #     self.state = States.ALIGN
-        #     return 0.0
+
         k_p = min(2.5, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
@@ -544,14 +541,6 @@ class StateSpacePolicy:
         if err_mag > 0.015:
             self.goal_reached = False
 
-        # if err_mag < 0.01 and self.difficulty == 4:
-        #     self.state = States.ORIENT
-        #     print("[GOAL]: Switching to ORIENT")
-        #     print("[GOAL]: K_p ", self.k_p)
-        #     print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
-        #     self.k_p = 0.5
-        #     self.ctr = 0
-
         if err_mag < 0.01:
             self.success_ctr += 1
 
@@ -565,7 +554,8 @@ class StateSpacePolicy:
         if not self.goal_reached and err_mag < 0.01 and self.success_ctr > 20:
             if self.difficulty == 4:
                 self.state = States.ORIENT
-            print("[GOAL]: Goal state achieved")
+                print ("[GOAL] Switching to ORIENT")
+            print("[GOAL]: Goal position achieved")
             print("[GOAL]: K_p ", self.k_p)
             self.goal_reached = True
             self.ctr = 0
@@ -621,6 +611,7 @@ class StateSpacePolicy:
         ang_err[6:] = -angle * \
             np.cross(into_err[6:] / np.linalg.norm(into_err[6:]), axis)
 
+        print ("[ORIENT] Angle err: ", ang_err, " Goal err: ", goal_err)
         return 0.04 * into_err + 0.11 * goal_err + 0.0004 * self.goal_err_sum + 0.006 * ang_err
 
     def predict(self, observation):

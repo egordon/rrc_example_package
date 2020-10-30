@@ -419,7 +419,7 @@ class StateSpacePolicy:
 
         err = desired - current
         # print ("[ALIGN] error: ", err)
-        if np.linalg.norm(err) < 2.0 * self.EPS:
+        if np.linalg.norm(err) < 1.0 * self.EPS:
             self.state = States.LOWER
             print("[ALIGN]: Switching to LOWER")
             print("[ALIGN]: K_p ", self.k_p)
@@ -536,9 +536,9 @@ class StateSpacePolicy:
             self.ctr = 0
             self.goal_begin_time = None
 
-        if not self.goal_reached:
-            print("[GOAL] Error magnitude ", err_mag, " K_p ",
-                k_p, " time: ", time.time() - self.start_time)
+        # if not self.goal_reached:
+        #     print("[GOAL] Error magnitude ", err_mag, " K_p ",
+        #         k_p, " time: ", time.time() - self.start_time)
 
         if err_mag > 0.015:
             self.goal_reached = False

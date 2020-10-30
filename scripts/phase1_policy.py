@@ -99,7 +99,7 @@ class StateSpacePolicy:
         self.last_align_error = 0.
         self.k_p = 0.4
         self.k_p_goal = 0.3
-        self.k_p_ang = 0.001
+        self.k_p_ang = 0.007
         self.ctr = 0
         self.force_offset = None
         self.interval = 100
@@ -617,7 +617,7 @@ class StateSpacePolicy:
         ang_err[6:] = -angle * \
             np.cross(into_err[6:] / np.linalg.norm(into_err[6:]), axis)
 
-        print ("[ORIENT] Time: ", time.time() - self.start_time, " Angle err mag: ", np.linalg.norm(ang_err), " Goal err: ", err_mag, " Angle err: ", ang_err)
+        print ("[ORIENT] Time: ", time.time() - self.start_time, " Kp orient: ", self.k_p_ang, " Angle err mag: ", np.linalg.norm(ang_err), " Goal err: ", err_mag, " Angle err: ", ang_err)
         return 0.30 * into_err + self.k_p_goal * goal_err + 0.002 * self.goal_err_sum + self.k_p_ang * ang_err
 
     def predict(self, observation):

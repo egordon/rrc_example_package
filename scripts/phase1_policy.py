@@ -563,7 +563,8 @@ class StateSpacePolicy:
         #     self.ctr = 0
 
         if not self.goal_reached and err_mag < 0.01 and self.success_ctr > 20:
-            # self.state = States.ORIENT
+            if self.difficulty == 4:
+                self.state = States.ORIENT
             print("[GOAL]: Goal state achieved")
             print("[GOAL]: K_p ", self.k_p)
             self.goal_reached = True

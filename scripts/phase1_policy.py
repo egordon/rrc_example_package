@@ -617,7 +617,7 @@ class StateSpacePolicy:
         ang_err[6:] = -angle * \
             np.cross(into_err[6:] / np.linalg.norm(into_err[6:]), axis)
 
-        print ("[ORIENT] Angle err: ", ang_err, " Goal err: ", goal_err)
+        print ("[ORIENT] Time: ", time.time() - self.start_time, " Angle err mag: ", np.linalg.norm(ang_err), " Goal err: ", err_mag, " Angle err: ", ang_err)
         return 0.35 * into_err + self.k_p_goal * goal_err + 0.002 * self.goal_err_sum + self.k_p_ang * ang_err
 
     def predict(self, observation):

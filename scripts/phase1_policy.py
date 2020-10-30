@@ -99,7 +99,7 @@ class StateSpacePolicy:
         self.last_align_error = 0.
         self.k_p = 0.4
         self.k_p_goal = 0.3
-        self.k_p_ang = 0.007
+        self.k_p_ang = 0.08
         self.ctr = 0
         self.force_offset = None
         self.interval = 100
@@ -568,7 +568,7 @@ class StateSpacePolicy:
             else:
                 self.ctr = 0
                 self.gain_increase_factor = 1.1
-                self.interval = 400
+                self.interval = 1500
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 
@@ -599,6 +599,7 @@ class StateSpacePolicy:
         if self.ori_begin_time is None:
             self.ori_begin_time = time.time()
 
+        self.k_p_ang = min(0.23, self.k_p_ang)
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)

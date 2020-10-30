@@ -652,9 +652,9 @@ class StateSpacePolicy:
             # print ("do goal")
             force = self.goal(observation)
 
-        # elif self.state == States.ORIENT:
+        elif self.state == States.ORIENT:
         #     # print ("do orient")
-        #     force = self.orient(observation)
+            force = self.orient(observation)
 
         # force = np.array([0., 0., 0.5, 0., 0., 0.5, 0., 0., 0.5])
         torque = J.T.dot(np.linalg.solve(

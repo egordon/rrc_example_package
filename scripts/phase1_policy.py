@@ -98,6 +98,8 @@ class StateSpacePolicy:
         self.iterm_align = 0.
         self.last_align_error = 0.
         self.k_p = 0.4
+        self.k_p_goal = 0.25
+        self.k_p_ang = 0.0005
         self.ctr = 0
         self.force_offset = None
         self.interval = 100
@@ -559,7 +561,11 @@ class StateSpacePolicy:
             print("[GOAL]: K_p ", self.k_p)
             self.goal_reached = True
             self.ctr = 0
-            self.gain_increase_factor = 1.0
+            if self.state == States.GOAL:
+                self.gain_increase_factor = 1.0
+            else:
+                self.gain_increase_factor = 1.2
+                self.interval = 2000
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 
@@ -612,7 +618,7 @@ class StateSpacePolicy:
             np.cross(into_err[6:] / np.linalg.norm(into_err[6:]), axis)
 
         print ("[ORIENT] Angle err: ", ang_err, " Goal err: ", goal_err)
-        return 0.25 * into_err + 0.4 * goal_err + 0.001 * self.goal_err_sum + 0.06 * ang_err
+        return 0.35 * into_err + self.k_p_goal * goal_err + 0.002 * self.goal_err_sum + self.k_p_ang * ang_err
 
     def predict(self, observation):
         # Get Jacobians
@@ -723,6 +729,9 @@ def main():
         if ctr % policy.interval == 0 and policy.ctr < 20:
             policy.ctr += 1
             policy.k_p *= policy.gain_increase_factor
+            if policy.state == States.ORIENT:
+                policy.k_p_goal *= policy.gain_increase_factor
+                policy.k_p_ang *= policy.gain_increase_factor
         # if ctr % 50 == 0:
         action = policy.predict(observation)
         # action = np.zeros((9))

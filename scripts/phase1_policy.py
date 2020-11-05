@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 """Simple example on how to move the robot."""
+import enum
 import json
 import sys
-import enum
-
-import robot_fingers
-import robot_interfaces
+import time
 
 import numpy as np
-from scipy.spatial.transform import Rotation as R
-
+import pybullet
+import robot_fingers
+import robot_interfaces
 from rrc_example_package import cube_env
+from scipy.spatial.transform import Rotation as R
 from trifinger_simulation import trifingerpro_limits
 from trifinger_simulation.tasks import move_cube
-
-import pybullet
-import time
 
 
 class States(enum.Enum):
@@ -37,8 +34,6 @@ class States(enum.Enum):
 
     #: Orient correctly
     ORIENT = enum.auto()
-
-    HOLD = enum.auto()
 
 
 def _quat_mult(q1, q2):
@@ -539,7 +534,7 @@ class StateSpacePolicy:
 
         if not self.goal_reached:
             print("[GOAL] Error magnitude ", err_mag, " K_p ",
-                k_p, " time: ", time.time() - self.start_time)
+                  k_p, " time: ", time.time() - self.start_time)
 
         if err_mag > 0.015:
             self.goal_reached = False
@@ -571,28 +566,6 @@ class StateSpacePolicy:
             self.gain_increase_factor = 1.0
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
-
-    def hold(self, observation):
-        # Return torque for into step
-        current = self._get_tip_poses(observation)
-        current_x = current[0::3]
-        difference = [abs(p1 - p2)
-                      for p1 in current_x for p2 in current_x if p1 != p2]
-
-        # k_p = min(15.0, self.k_p)
-        if any(y < 0.0001 for y in difference):
-            self.state = States.RESET
-            print("[HOLD]: Switching to RESET")
-            print("[HOLD]: K_p ", self.k_p)
-            print("[HOLD]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.5
-            self.ctr = 0
-
-        desired = np.tile(observation["achieved_goal"]["position"], 3)
-
-        err = desired - current
-        err_hat = err / np.linalg.norm(err)
-        return 0.04 * err_hat
 
     def orient(self, observation):
         # Return torque for lower step
@@ -652,10 +625,6 @@ class StateSpacePolicy:
             # print ("do goal")
             force = self.goal(observation)
 
-        elif self.state == States.HOLD:
-            # print ("do goal")
-            force = self.hold(observation)
-
         # elif self.state == States.ORIENT:
         #     # print ("do orient")
         #     force = self.orient(observation)
@@ -680,9 +649,14 @@ episode_length = 2 * 60 * 1000
 def main():
     # the difficulty level and the goal pose (as JSON string) are passed as
     # arguments
-    difficulty = 4
-    goal_pose_json = sys.argv[2]
+
+    # TODO: Uncomment before submission
+    # difficulty = int(sys.argv[1])
+    # goal_pose_json = sys.argv[2]
     # goal = json.loads(goal_pose_json)
+
+    # TODO: Comment before submission
+    difficulty = 3
     goal_pose = move_cube.sample_goal(difficulty)
     goal = {'position': goal_pose.position,
             'orientation': goal_pose.orientation}
@@ -703,28 +677,11 @@ def main():
     is_done = False
 
     ctr = 0
-    # position_up = [0.5, 1.2, -2.4] * 3
-    # action = robot_interfaces.trifinger.Action(position=position_up)
-    # for _ in range(50):
-    #     t = env.platform.append_desired_action(action)
-    #     env.platform.wait_until_timeindex(t)
-
-    #     # make sure to not exceed the number of allowed actions
-    #     if t >= episode_length - 1:
-    #         return
-
     """
     TODOs
-    * send zero torque [should fall down]
-    * test grav comp [should stay still]
-    * test jacobian: send constant force +x for all arms
-
-    * give zero torque after reset
-    * reduce PID for initial phase and tighten the threshold
-    * reset and align
-
     * one of the hands should have a lower tip force
     """
+
     zero_torque_action = robot_interfaces.trifinger.Action()
     t = env.platform.append_desired_action(zero_torque_action)
     # env.platform.wait_until_timeindex(t)

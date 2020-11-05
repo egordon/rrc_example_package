@@ -202,6 +202,14 @@ class StateSpacePolicy:
         return observation["observation"]["tip_positions"].flatten()
 
     def prealign(self, observation):
+        # get mean cube pose
+        print ("IN PRE ALIGN")
+        self.cube_position.append(observation["achieved_goal"]["position"])
+        self.cube_orient.append(observation["achieved_goal"]["orientation"])
+        curr_cube_position = np.mean(np.array(self.cube_position), axis=0)
+        curr_cube_position[2] = self.CUBE_SIZE
+        curr_cube_orient = np.mean(np.array(self.cube_orient), axis=0)
+
         # Return torque for align step
         current = self._get_tip_poses(observation)
 
@@ -215,16 +223,27 @@ class StateSpacePolicy:
                     np.pi/2 * i * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 2
 
-        desired = np.tile(observation["achieved_goal"]["position"], 3) + \
+        desired = np.tile(curr_cube_position, 3) + \
             self.CUBE_SIZE * np.hstack(locs)
 
         err = desired - current
-        if np.linalg.norm(err) < self.EPS:
-            print("PRE LOWER")
+        if np.linalg.norm(err) < 0.02:
             self.state = States.LOWER
-        return 0.08 * err
+            print("[ALIGN]: Switching to PRE LOWER")
+            print("[ALIGN]: K_p ", self.k_p)
+            print("[ALIGN]: Cube pos ", curr_cube_position)
+            self.k_p = 1.2
+            self.ctr = 0
+
+        return self.k_p * err
 
     def prelower(self, observation):
+        self.cube_position.append(observation["achieved_goal"]["position"])
+        self.cube_orient.append(observation["achieved_goal"]["orientation"])
+        curr_cube_position = np.mean(np.array(self.cube_position), axis=0)
+        curr_cube_position[2] = self.CUBE_SIZE
+        curr_cube_orient = np.mean(np.array(self.cube_orient), axis=0)
+
         # Return torque for align step
         current = self._get_tip_poses(observation)
 
@@ -239,15 +258,21 @@ class StateSpacePolicy:
             if i == 1:
                 locs[index][2] += 0.4
 
-        desired = np.tile(observation["achieved_goal"]["position"], 3) + \
+        desired = np.tile(curr_cube_position, 3) + \
             self.CUBE_SIZE * np.hstack(locs)
 
         err = desired - current
-        if np.linalg.norm(err) < self.EPS:
+        if np.linalg.norm(err) < 0.02:
             self.previous_state = observation["observation"]["position"]
-            print("PRE INTO")
             self.state = States.INTO
-        return 0.08 * err
+            print("[LOWER]: Switching to PRE INTO")
+            print("[LOWER]: K_p ", self.k_p)
+            print("[LOWER]: Cube pos ", curr_cube_position)
+            print("[LOWER]: Current Tip Forces ",
+                  observation["observation"]["tip_force"])
+            self.k_p = 1.2
+            self.ctr = 0
+        return self.k_p * err
 
     def preinto(self, observation):
         # Return torque for into step
@@ -262,10 +287,10 @@ class StateSpacePolicy:
         err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.5
 
         # Read Tip Force
-        tip_forces = observation["observation"]["tip_force"]
+        tip_forces = observation["observation"]["tip_force"] - self.force_offset
         switch = True
         for f in tip_forces:
-            if f < 0.03:
+            if f < 0.1:
                 switch = False
 
         # Override with small diff
@@ -276,11 +301,15 @@ class StateSpacePolicy:
             switch = True
 
         if switch:
-            self.pregoal_state = observation["achieved_goal"]["position"]
-            print("PRE GOAL")
             self.state = States.GOAL
+            print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
+            print("[INTO]: Switching to PRE GOAL")
+            print("[INTO]: K_p ", self.k_p)
+            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.65
+            self.ctr = 0
 
-        return 0.1 * err
+        return self.k_p * err
 
     def pregoal(self, observation):
         # Return torque for goal step
@@ -314,6 +343,12 @@ class StateSpacePolicy:
         if diff < 0.5 * self.CUBE_SIZE:
             print("PRE ORIENT")
             self.state = States.ORIENT
+            print("[GOAL]: Switching to PRE ORIENT")
+            print("[GOAL]: K_p ", self.k_p)
+            print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
+
         # Once high enough, drop
         # if observation["achieved_goal"]["position"][2] > 2 * self.CUBE_SIZE:
         #    print("PRE ORIENT")
@@ -333,7 +368,7 @@ class StateSpacePolicy:
         # if np.amax(diff) < 1e-6:
         #    switch = True
 
-        return 0.05 * into_err + 0.1 * goal_err + 0.25 * rot_err
+        return 0.15 * into_err + self.k_p * goal_err + 0.35 * rot_err
 
     def preorient(self, observation):
         # Return torque for into step
@@ -344,7 +379,7 @@ class StateSpacePolicy:
         err = current - desired
 
         # Read Tip Force
-        tip_forces = observation["observation"]["tip_force"]
+        tip_forces = observation["observation"]["tip_force"] - self.force_offset
         switch = False
         for f in tip_forces:
             if f < 0.1:
@@ -352,31 +387,33 @@ class StateSpacePolicy:
         if switch:
             self.manip_angle -= 90
             print("MANIP DONE")
-            self.state = States.ALIGN
+            self.state = States.RESET
+            self.k_p = 1.2
+            self.ctr = 0
 
-        return 0.1 * err
+        return self.k_p * err
 
     def premanip(self, observation):
         force = np.zeros(9)
 
         if self.state == States.ALIGN:
-            print("do prealign")
+            # print("do prealign")
             force = self.prealign(observation)
 
         elif self.state == States.LOWER:
-            print("do prelower")
+            # print("do prelower")
             force = self.prelower(observation)
 
         elif self.state == States.INTO:
-            print("do preinto")
+            # print("do preinto")
             force = self.preinto(observation)
 
         elif self.state == States.GOAL:
-            print("do pregoal")
+            # print("do pregoal")
             force = self.pregoal(observation)
 
         elif self.state == States.ORIENT:
-            print("do preorient")
+            # print("do preorient")
             force = self.preorient(observation)
 
         if self.manip_angle == 0:
@@ -387,6 +424,8 @@ class StateSpacePolicy:
 
     def reset(self, observation):
         # print ("[RESET]: ON RESET")
+        self.cube_position.clear()
+        self.cube_orient.clear()
         current = self._get_tip_poses(observation)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         desired = np.array(
@@ -675,7 +714,7 @@ def main():
     # goal = json.loads(goal_pose_json)
 
     # TODO: Comment before submission
-    difficulty = 3
+    difficulty = 4
     goal_pose = move_cube.sample_goal(difficulty)
     goal = {'position': goal_pose.position,
             'orientation': goal_pose.orientation}

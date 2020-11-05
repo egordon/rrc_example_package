@@ -93,7 +93,7 @@ class StateSpacePolicy:
         self.finger = env.sim_platform.simfinger
         self.iterm_align = 0.
         self.last_align_error = 0.
-        self.k_p = 0.4
+        self.k_p = 1.2
         self.ctr = 0
         self.force_offset = None
         self.interval = 1000
@@ -395,7 +395,7 @@ class StateSpacePolicy:
             print("[RESET]: K_p ", self.k_p)
             print("[RESET]: Cube pos ", observation['achieved_goal']['position'])
             self.force_offset = observation["observation"]["tip_force"]
-            self.k_p = 0.1
+            self.k_p = 1.5
             self.ctr = 0
 
         self.last_reset_error = err
@@ -426,7 +426,7 @@ class StateSpacePolicy:
             print("[ALIGN]: Switching to LOWER")
             print("[ALIGN]: K_p ", self.k_p)
             print("[ALIGN]: Cube pos ", curr_cube_position)
-            self.k_p = 0.5
+            self.k_p = 1.2
             self.ctr = 0
 
         delta_err = err - self.last_align_error
@@ -459,7 +459,7 @@ class StateSpacePolicy:
             print("[LOWER]: Cube pos ", curr_cube_position)
             print("[LOWER]: Current Tip Forces ",
                   observation["observation"]["tip_force"])
-            self.k_p = 0.5
+            self.k_p = 2.5
             self.ctr = 0
 
         return self.k_p * err
@@ -500,7 +500,7 @@ class StateSpacePolicy:
             print("[INTO]: Switching to GOAL")
             print("[INTO]: K_p ", self.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.65
+            self.k_p = 0.74
             self.ctr = 0
             self.gain_increase_factor = 1.08
             self.interval = 2500

@@ -379,8 +379,8 @@ class RealRobotCubeEnv(gym.GoalEnv):
             "action": action,
             "desired_goal": self.goal,
             "achieved_goal": {
-                "position": camera_observation.object_pose.position,
-                "orientation": camera_observation.object_pose.orientation,
+                "position": camera_observation.filtered_object_pose.position,
+                "orientation": camera_observation.filtered_object_pose.orientation,
             },
         }
         return observation

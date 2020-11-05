@@ -4,6 +4,7 @@ import enum
 import json
 import sys
 import time
+from collections import deque
 
 import numpy as np
 import pybullet
@@ -102,6 +103,8 @@ class StateSpacePolicy:
         self.goal_reached = False
         # to avoid completion because of error in cube position
         self.success_ctr = 0
+        self.cube_position = deque(maxlen=100)
+        self.cube_orient = deque(maxlen=100)
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -401,9 +404,15 @@ class StateSpacePolicy:
         return self.k_p * err  # + 0.0001* delta_err + 0.16 * self.iterm_reset
 
     def align(self, observation):
+        # get mean cube pose
+        self.cube_position.append(observation["achieved_goal"]["position"])
+        self.cube_orient.append(observation["achieved_goal"]["orientation"])
+        curr_cube_position = np.mean(np.array(self.cube_position), axis=0)
+        curr_cube_orient = np.mean(np.array(self.cube_orient), axis=0)
+
         # Return torque for align step
         current = self._get_tip_poses(observation)
-        x, y = observation["achieved_goal"]["position"][:2]
+        x, y = curr_cube_position[:2]
         z = self.CUBE_SIZE
         desired = np.tile(np.array([x, y, z]), 3) + \
             (self.CUBE_SIZE + 0.015) * \
@@ -416,7 +425,7 @@ class StateSpacePolicy:
             self.state = States.LOWER
             print("[ALIGN]: Switching to LOWER")
             print("[ALIGN]: K_p ", self.k_p)
-            print("[ALIGN]: Cube pos ", observation['achieved_goal']['position'])
+            print("[ALIGN]: Cube pos ", curr_cube_position)
             self.k_p = 0.5
             self.ctr = 0
 
@@ -427,10 +436,15 @@ class StateSpacePolicy:
         return self.k_p * err  # + 0.01 * self.iterm_align
 
     def lower(self, observation):
+        self.cube_position.append(observation["achieved_goal"]["position"])
+        self.cube_orient.append(observation["achieved_goal"]["orientation"])
+        curr_cube_position = np.mean(np.array(self.cube_position), axis=0)
+        curr_cube_orient = np.mean(np.array(self.cube_orient), axis=0)
+
         # Return torque for lower step
         current = self._get_tip_poses(observation)
 
-        x, y = observation["achieved_goal"]["position"][:2]
+        x, y = curr_cube_position[:2]
         z = self.CUBE_SIZE
         desired = np.tile(np.array([x, y, z]), 3) + \
             (self.CUBE_SIZE + 0.015) * \
@@ -442,7 +456,7 @@ class StateSpacePolicy:
             self.state = States.INTO
             print("[LOWER]: Switching to INTO")
             print("[LOWER]: K_p ", self.k_p)
-            print("[LOWER]: Cube pos ", observation['achieved_goal']['position'])
+            print("[LOWER]: Cube pos ", curr_cube_position)
             print("[LOWER]: Current Tip Forces ",
                   observation["observation"]["tip_force"])
             self.k_p = 0.5

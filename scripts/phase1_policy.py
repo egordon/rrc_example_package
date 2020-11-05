@@ -72,7 +72,7 @@ class StateSpacePolicy:
 
     def __init__(self, env, difficulty, observation):
         self.action_space = env.action_space
-        self.state = States.ALIGN
+        self.state = States.RESET
         self.difficulty = difficulty
 
         if self.difficulty == 4:
@@ -83,13 +83,7 @@ class StateSpacePolicy:
         self.DAMP = 1E-6
         self.CUBE_SIZE = 0.0325
 
-        if difficulty == 4:
-            # Do Pre-manpulation
-            self.do_premanip = True
-            self._calculate_premanip(observation)
-        else:
-            self.do_premanip = False
-            # self._calculate_premanip(observation)
+        self.do_premanip = False
 
         self.t = 0
         self.last_reset_error = 0.
@@ -433,6 +427,12 @@ class StateSpacePolicy:
         err = desired - current
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
+            if self.difficulty == 4:
+                self.do_premanip = True
+                self._calculate_premanip(observation)
+            else:
+                self.do_premanip = False
+                # self._calculate_premanip(observation)
             self.state = States.ALIGN
             print("[RESET]: Switching to ALIGN")
             print("[RESET]: K_p ", self.k_p)

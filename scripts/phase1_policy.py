@@ -72,7 +72,7 @@ class StateSpacePolicy:
 
     def __init__(self, env, difficulty, observation):
         self.action_space = env.action_space
-        self.state = States.RESET
+        self.state = States.ALIGN
         self.difficulty = difficulty
 
         if self.difficulty == 4:
@@ -661,7 +661,7 @@ class StateSpacePolicy:
         force = np.zeros(9)
 
         if self.do_premanip:
-            # print ("do premanip")
+            print ("do premanip")
             force = self.premanip(observation)
 
         elif self.state == States.RESET:

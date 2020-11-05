@@ -504,10 +504,10 @@ class StateSpacePolicy:
             print("[INTO]: Switching to GOAL")
             print("[INTO]: K_p ", self.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.67
+            self.k_p = 0.65
             self.ctr = 0
             self.gain_increase_factor = 1.08
-            self.interval = 2000
+            self.interval = 2500
 
         self.goal_err_sum = np.zeros(9)
         return k_p * err
@@ -584,7 +584,7 @@ class StateSpacePolicy:
             self.gain_increase_factor = 1.0
 
         # k_p = 0.65
-        return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
+        return k_p * goal_err + 0.30 * into_err + 0.002 * self.goal_err_sum
 
     def orient(self, observation):
         # Return torque for lower step

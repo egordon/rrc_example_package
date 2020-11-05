@@ -703,7 +703,7 @@ def main():
     policy.start_time = time.time()
     while not is_done:
         ctr += 1
-        if ctr % policy.interval == 0 and policy.ctr < 20:
+        if ctr % policy.interval == 0 and policy.ctr < 40:
             policy.ctr += 1
             policy.k_p *= policy.gain_increase_factor
         # if ctr % 50 == 0:

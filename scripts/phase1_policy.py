@@ -75,7 +75,11 @@ class StateSpacePolicy:
         self.state = States.RESET
         self.difficulty = difficulty
 
-        self.EPS = 1E-2
+        if self.difficulty == 4:
+            self.EPS = 5e-3
+        else:
+            self.EPS = 2e-2
+
         self.DAMP = 1E-6
         self.CUBE_SIZE = 0.0325
 
@@ -93,7 +97,7 @@ class StateSpacePolicy:
         self.finger = env.sim_platform.simfinger
         self.iterm_align = 0.
         self.last_align_error = 0.
-        self.k_p = 1.2
+        self.k_p = 1.1
         self.ctr = 0
         self.force_offset = None
         self.interval = 1000
@@ -215,7 +219,7 @@ class StateSpacePolicy:
             self.CUBE_SIZE * np.hstack(locs)
 
         err = desired - current
-        if np.linalg.norm(err) < 3 * self.EPS:
+        if np.linalg.norm(err) < self.EPS:
             print("PRE LOWER")
             self.state = States.LOWER
         return 0.08 * err
@@ -239,7 +243,7 @@ class StateSpacePolicy:
             self.CUBE_SIZE * np.hstack(locs)
 
         err = desired - current
-        if np.linalg.norm(err) < 3*self.EPS:
+        if np.linalg.norm(err) < self.EPS:
             self.previous_state = observation["observation"]["position"]
             print("PRE INTO")
             self.state = States.INTO
@@ -389,7 +393,7 @@ class StateSpacePolicy:
             self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
         err = desired - current
         delta_err = err - self.last_reset_error
-        if np.linalg.norm(err) < 2 * self.EPS:
+        if np.linalg.norm(err) < 0.02:
             self.state = States.ALIGN
             print("[RESET]: Switching to ALIGN")
             print("[RESET]: K_p ", self.k_p)
@@ -421,7 +425,7 @@ class StateSpacePolicy:
 
         err = desired - current
         # print ("[ALIGN] error: ", err)
-        if np.linalg.norm(err) < 0.5 * self.EPS:
+        if np.linalg.norm(err) < self.EPS:
             self.state = States.LOWER
             print("[ALIGN]: Switching to LOWER")
             print("[ALIGN]: K_p ", self.k_p)
@@ -452,7 +456,7 @@ class StateSpacePolicy:
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
 
         err = desired - current
-        if np.linalg.norm(err) < 0.5 * self.EPS:
+        if np.linalg.norm(err) < self.EPS:
             self.state = States.INTO
             print("[LOWER]: Switching to INTO")
             print("[LOWER]: K_p ", self.k_p)

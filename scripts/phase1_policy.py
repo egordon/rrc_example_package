@@ -96,7 +96,7 @@ class StateSpacePolicy:
         self.k_p = 0.4
         self.ctr = 0
         self.force_offset = None
-        self.interval = 100
+        self.interval = 1000
         self.gain_increase_factor = 1.2
         self.start_time = None
         self.goal_begin_time = None
@@ -421,7 +421,7 @@ class StateSpacePolicy:
 
         err = desired - current
         # print ("[ALIGN] error: ", err)
-        if np.linalg.norm(err) < 2.0 * self.EPS:
+        if np.linalg.norm(err) < 0.1 * self.EPS:
             self.state = States.LOWER
             print("[ALIGN]: Switching to LOWER")
             print("[ALIGN]: K_p ", self.k_p)
@@ -452,7 +452,7 @@ class StateSpacePolicy:
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
 
         err = desired - current
-        if np.linalg.norm(err) < 2 * self.EPS:
+        if np.linalg.norm(err) < 0.1 * self.EPS:
             self.state = States.INTO
             print("[LOWER]: Switching to INTO")
             print("[LOWER]: K_p ", self.k_p)

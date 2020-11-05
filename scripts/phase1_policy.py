@@ -421,7 +421,7 @@ class StateSpacePolicy:
 
         err = desired - current
         # print ("[ALIGN] error: ", err)
-        if np.linalg.norm(err) < 0.1 * self.EPS:
+        if np.linalg.norm(err) < 0.5 * self.EPS:
             self.state = States.LOWER
             print("[ALIGN]: Switching to LOWER")
             print("[ALIGN]: K_p ", self.k_p)
@@ -452,7 +452,7 @@ class StateSpacePolicy:
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
 
         err = desired - current
-        if np.linalg.norm(err) < 0.1 * self.EPS:
+        if np.linalg.norm(err) < 0.5 * self.EPS:
             self.state = States.INTO
             print("[LOWER]: Switching to INTO")
             print("[LOWER]: K_p ", self.k_p)
@@ -703,7 +703,7 @@ def main():
     policy.start_time = time.time()
     while not is_done:
         ctr += 1
-        if ctr % policy.interval == 0 and policy.ctr < 40:
+        if ctr % policy.interval == 0 and policy.ctr < 30:
             policy.ctr += 1
             policy.k_p *= policy.gain_increase_factor
         # if ctr % 50 == 0:

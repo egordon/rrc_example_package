@@ -579,6 +579,7 @@ class StateSpacePolicy:
             self.ctr = 0
             self.gain_increase_factor = 1.0
 
+        k_p = 0.70
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 
     def orient(self, observation):

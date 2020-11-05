@@ -463,7 +463,7 @@ class StateSpacePolicy:
             print("[LOWER]: Cube pos ", curr_cube_position)
             print("[LOWER]: Current Tip Forces ",
                   observation["observation"]["tip_force"])
-            self.k_p = 2.5
+            self.k_p = 1.2
             self.ctr = 0
 
         return self.k_p * err

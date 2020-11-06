@@ -218,12 +218,12 @@ class StateSpacePolicy:
             locs[index][2] = 2
 
         desired = np.tile(curr_cube_position, 3) + \
-            (self.CUBE_SIZE + 0.015) * np.hstack(locs)
+            (self.CUBE_SIZE) * np.hstack(locs)
 
         # desired[::3] -= 0.015 * np.hstack(locs)[::3]
 
         err = desired - current
-        if np.linalg.norm(err) < 0.02:
+        if np.linalg.norm(err) < 0.01:
             self.state = States.LOWER
             print("[ALIGN]: Switching to PRE LOWER")
             print("[ALIGN]: K_p ", self.k_p)
@@ -309,6 +309,7 @@ class StateSpacePolicy:
             # self.do_premanip = False
             self.interval = 250
 
+        self.goal_err_sum = np.zeros(9)
         return self.k_p * err
 
     def pregoal(self, observation):
@@ -331,6 +332,10 @@ class StateSpacePolicy:
         goal = np.tile(goal, 3)
         goal_err = goal - desired
         goal_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0
+
+        err_mag = np.linalg.norm(goal_err[:3])
+        if err_mag < 0.1:
+            self.goal_err_sum += goal_err
 
         rot_err = np.zeros(9)
         rot_err[3*self.manip_arm:3*self.manip_arm +
@@ -362,7 +367,7 @@ class StateSpacePolicy:
         # TODO: tweak the factor here
         factor = 1.0  # 0.5 previously
         if diff < factor * self.CUBE_SIZE:
-            print("PRE ORIENT")
+            # print("PRE ORIENT")
             self.state = States.ORIENT
             print("[GOAL]: Switching to PRE ORIENT")
             print("[GOAL]: K_p ", self.k_p)
@@ -390,7 +395,7 @@ class StateSpacePolicy:
         # if np.amax(diff) < 1e-6:
         #    switch = True
 
-        return 0.25 * into_err + k_p * goal_err + 0.35 * rot_err
+        return 0.25 * into_err + k_p * goal_err + 0.35 * rot_err + + 0.002 * self.goal_err_sum
 
     def preorient(self, observation):
         # Return torque for into step

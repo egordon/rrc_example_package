@@ -130,7 +130,7 @@ class StateSpacePolicy:
                 self.manip_axis = new_axis
 
         # Check 180 degree rotation
-        """ NO TIME FOR 180
+        # NO TIME FOR 180
         new_axis = R.from_quat(current).apply(np.array([1, 0, 0]))
         rotation = R.from_rotvec(np.pi * new_axis)
         new_current = rotation * R.from_quat(current)
@@ -139,7 +139,6 @@ class StateSpacePolicy:
             minAngle = angle
             self.manip_angle = 180
             self.manip_axis = new_axis
-        """
 
         # Determine rotation arm
         arm_angle = np.arctan2(

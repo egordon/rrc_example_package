@@ -220,7 +220,7 @@ class StateSpacePolicy:
         desired = np.tile(curr_cube_position, 3) + \
             (self.CUBE_SIZE + 0.015) * np.hstack(locs)
 
-        # desired[::3] -= 0.015 * np.hstack(locs)[::3]
+        desired[self.manip_arm * 3 + 2] += 0.01 * np.hstack(locs)[self.manip_arm * 3 + 2]
 
         err = desired - current
         if np.linalg.norm(err) < 0.01:
@@ -275,6 +275,18 @@ class StateSpacePolicy:
     def preinto(self, observation):
         # Return torque for into step
         current = self._get_tip_poses(observation)
+        current_x = current[0::3]
+        difference = [abs(p1 - p2)
+                      for p1 in current_x for p2 in current_x if p1 != p2]
+        # print ("TIP diff: ", difference)
+        k_p = min(15.0, self.k_p)
+        if any(y < 0.0001 for y in difference):
+            self.state = States.RESET
+            print("[INTO]: Switching to RESET")
+            print("[INTO]: K_p ", self.k_p)
+            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
         desired[3*self.manip_arm+2] += 0.4*self.CUBE_SIZE

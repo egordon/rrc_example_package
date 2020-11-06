@@ -493,7 +493,7 @@ class StateSpacePolicy:
             self.state = States.LOWER
             print("[ALIGN]: Switching to LOWER")
             print("[ALIGN]: K_p ", self.k_p)
-            print("[ALIGN]: Cube pos ", curr_cube_position)
+            print("[ALIGN]: Cube pos ", curr_cube_position, " Orient: ", curr_cube_orient)
             self.k_p = 1.2
             self.ctr = 0
 
@@ -621,13 +621,13 @@ class StateSpacePolicy:
         if err_mag > 0.015:
             self.goal_reached = False
 
-        if err_mag < 0.01 and self.difficulty == 4:
-            self.state = States.ORIENT
-            print("[GOAL]: Switching to ORIENT")
-            print("[GOAL]: K_p ", self.k_p)
-            print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.5
-            self.ctr = 0
+        # if err_mag < 0.01 and self.difficulty == 4:
+        #     self.state = States.ORIENT
+        #     print("[GOAL]: Switching to ORIENT")
+        #     print("[GOAL]: K_p ", self.k_p)
+        #     print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
+        #     self.k_p = 0.5
+        #     self.ctr = 0
 
         if err_mag < 0.01:
             self.success_ctr += 1

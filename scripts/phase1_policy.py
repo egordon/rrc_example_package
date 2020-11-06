@@ -218,7 +218,7 @@ class StateSpacePolicy:
             locs[index][2] = 2
 
         desired = np.tile(curr_cube_position, 3) + \
-            (self.CUBE_SIZE) * np.hstack(locs)
+            (self.CUBE_SIZE + 0.015) * np.hstack(locs)
 
         # desired[::3] -= 0.015 * np.hstack(locs)[::3]
 
@@ -351,7 +351,7 @@ class StateSpacePolicy:
         print("[GOAL] Rot err magnitude ", np.linalg.norm(rot_err), " Diff", diff, " K_p ",
               self.k_p, " time: ", time.time() - self.start_time)
 
-        if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 30.0:
+        if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:
             self.state = States.RESET
             print("[GOAL]: Switching to RESET")
             print("[GOAL]: K_p ", self.k_p)
@@ -360,7 +360,7 @@ class StateSpacePolicy:
             self.interval = 100
             self.gain_increase_factor = 1.2
             self.ctr = 0
-            self.goal_begin_time = None
+            self.pregoal_begin_time = None
             self.do_premanip = False
 
         #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
@@ -395,7 +395,7 @@ class StateSpacePolicy:
         # if np.amax(diff) < 1e-6:
         #    switch = True
 
-        return 0.25 * into_err + k_p * goal_err + 0.35 * rot_err + + 0.002 * self.goal_err_sum
+        return 0.15 * into_err + k_p * goal_err + 0.35 * rot_err + + 0.002 * self.goal_err_sum
 
     def preorient(self, observation):
         # Return torque for into step

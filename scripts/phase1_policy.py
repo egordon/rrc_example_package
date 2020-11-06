@@ -268,6 +268,8 @@ class StateSpacePolicy:
                   observation["observation"]["tip_force"])
             self.k_p = 1.2
             self.ctr = 0
+            self.cube_position.clear()
+            self.cube_orient.clear()
         return self.k_p * err
 
     def preinto(self, observation):
@@ -320,7 +322,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
-        k_p = min(8.0, self.k_p)
+        k_p = min(5.0, self.k_p)
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
@@ -365,7 +367,7 @@ class StateSpacePolicy:
 
         #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
         # TODO: tweak the factor here
-        factor = 1.0  # 0.5 previously
+        factor = 0.5  # 0.5 previously
         if diff < factor * self.CUBE_SIZE:
             # print("PRE ORIENT")
             self.state = States.ORIENT
@@ -395,7 +397,7 @@ class StateSpacePolicy:
         # if np.amax(diff) < 1e-6:
         #    switch = True
 
-        return 0.15 * into_err + k_p * goal_err + 0.35 * rot_err + + 0.002 * self.goal_err_sum
+        return 0.15 * into_err + k_p * goal_err + 0.35 * rot_err + + 0.0005 * self.goal_err_sum
 
     def preorient(self, observation):
         # Return torque for into step
@@ -410,7 +412,7 @@ class StateSpacePolicy:
             self.force_offset
         switch = False
         for f in tip_forces:
-            if f < 0.2:
+            if f < 0.1:
                 switch = True
         if switch:
             self.manip_angle -= 90
@@ -483,8 +485,9 @@ class StateSpacePolicy:
             print("[RESET]: K_p ", self.k_p)
             print("[RESET]: Cube pos ", observation['achieved_goal']['position'])
             self.force_offset = observation["observation"]["tip_force"]
-            self.k_p = 1.5
+            self.k_p = 0.8
             self.ctr = 0
+            self.interval = 100
 
         self.last_reset_error = err
         k_i = 0.1

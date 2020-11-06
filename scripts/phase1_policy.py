@@ -447,7 +447,7 @@ class StateSpacePolicy:
 
         if self.manip_angle == 0:
             # verify
-            self.manip_angle = self._calculate_premanip(observation)
+            self._calculate_premanip(observation)
             if self.manip_angle == 0:
                 self.do_premanip = False
                 self.state = States.ALIGN
@@ -468,8 +468,11 @@ class StateSpacePolicy:
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
             if self.difficulty == 4:
-                self.do_premanip = True
                 self._calculate_premanip(observation)
+                if self.manip_angle != 0:
+                    self.do_premanip = True
+                else:
+                    self.do_premanip = False
             else:
                 self.do_premanip = False
                 # self._calculate_premanip(observation)

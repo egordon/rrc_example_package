@@ -94,7 +94,7 @@ class StateSpacePolicy:
         self.k_p = 1.1
         self.ctr = 0
         self.force_offset = None
-        self.interval = 1000
+        self.interval = 100
         self.gain_increase_factor = 1.2
         self.start_time = None
         self.goal_begin_time = None

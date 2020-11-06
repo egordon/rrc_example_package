@@ -706,13 +706,12 @@ class StateSpacePolicy:
 
         force = np.zeros(9)
 
-        if self.do_premanip:
-            # print ("do premanip")
-            force = self.premanip(observation)
-
-        elif self.state == States.RESET:
+        if self.state == States.RESET:
             # print ("do reset")
             force = self.reset(observation)
+        elif self.do_premanip:
+            # print ("do premanip")
+            force = self.premanip(observation)
         elif self.state == States.ALIGN:
             # print ("do align")
             force = self.align(observation)

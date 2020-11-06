@@ -317,7 +317,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
-        k_p = min(5.0, self.k_p)
+        k_p = min(6.0, self.k_p)
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
@@ -349,7 +349,7 @@ class StateSpacePolicy:
             print("[GOAL]: Switching to RESET")
             print("[GOAL]: K_p ", self.k_p)
             print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.8
+            self.k_p = 0.5
             self.interval = 100
             self.gain_increase_factor = 1.2
             self.ctr = 0
@@ -358,7 +358,7 @@ class StateSpacePolicy:
 
         #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
         # TODO: tweak the factor here
-        factor = 1.0 # 0.5 previously
+        factor = 0.8 # 0.5 previously
         if diff < factor * self.CUBE_SIZE:
             print("PRE ORIENT")
             self.state = States.ORIENT

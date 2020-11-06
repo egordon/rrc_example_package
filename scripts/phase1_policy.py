@@ -304,7 +304,7 @@ class StateSpacePolicy:
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
-            self.do_premanip = False
+            # self.do_premanip = False
             self.interval = 1000
 
         return self.k_p * err
@@ -354,6 +354,7 @@ class StateSpacePolicy:
             self.gain_increase_factor = 1.2
             self.ctr = 0
             self.goal_begin_time = None
+            self.do_premanip = False
 
         #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
         # TODO: tweak the factor here

@@ -400,7 +400,7 @@ class StateSpacePolicy:
     def preorient(self, observation):
         # Return torque for into step
         current = self._get_tip_poses(observation)
-
+        k_p = min(self.k_p, 6.0)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         err = current - desired
@@ -410,17 +410,17 @@ class StateSpacePolicy:
             self.force_offset
         switch = False
         for f in tip_forces:
-            if f < 0.1:
+            if f < 0.2:
                 switch = True
         if switch:
             self.manip_angle -= 90
             print("MANIP DONE")
-            self.state = States.RESET
+            self.state = States.GOAL
             self.k_p = 1.2
             self.interval = 200
             self.ctr = 0
 
-        return self.k_p * err
+        return k_p * err
 
     def premanip(self, observation):
         force = np.zeros(9)
@@ -447,6 +447,7 @@ class StateSpacePolicy:
 
         if self.manip_angle == 0:
             # verify
+            print ("Verify premanip")
             self._calculate_premanip(observation)
             if self.manip_angle == 0:
                 self.do_premanip = False
@@ -468,6 +469,7 @@ class StateSpacePolicy:
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
             if self.difficulty == 4:
+                print ("[RESET] Verify premanip")
                 self._calculate_premanip(observation)
                 if self.manip_angle != 0:
                     self.do_premanip = True

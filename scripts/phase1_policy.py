@@ -367,7 +367,7 @@ class StateSpacePolicy:
 
         #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
         # TODO: tweak the factor here
-        factor = 0.5  # 0.5 previously
+        factor = 0.7  # 0.5 previously
         if diff < factor * self.CUBE_SIZE:
             # print("PRE ORIENT")
             self.state = States.ORIENT
@@ -397,7 +397,7 @@ class StateSpacePolicy:
         # if np.amax(diff) < 1e-6:
         #    switch = True
 
-        return 0.15 * into_err + k_p * goal_err + 0.35 * rot_err + + 0.0005 * self.goal_err_sum
+        return 0.15 * into_err + k_p * goal_err + 0.25 * rot_err #+  0.0005 * self.goal_err_sum
 
     def preorient(self, observation):
         # Return torque for into step

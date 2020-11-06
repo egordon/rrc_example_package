@@ -441,8 +441,13 @@ class StateSpacePolicy:
             force = self.preorient(observation)
 
         if self.manip_angle == 0:
-            self.do_premanip = False
-            self.state = States.ALIGN
+            # verify
+            self.manip_angle = self._calculate_premanip(observation)
+            if self.manip_angle == 0:
+                self.do_premanip = False
+                self.state = States.ALIGN
+            else:
+                self.state = States.RESET
 
         return force
 

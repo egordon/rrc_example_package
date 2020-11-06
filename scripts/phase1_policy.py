@@ -220,6 +220,8 @@ class StateSpacePolicy:
         desired = np.tile(curr_cube_position, 3) + \
             (self.CUBE_SIZE + 0.015) * np.hstack(locs)
 
+        desired[::3] -= 0.015 * np.hstack(locs)
+
         err = desired - current
         if np.linalg.norm(err) < 0.02:
             self.state = States.LOWER
@@ -281,7 +283,8 @@ class StateSpacePolicy:
         err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.5
 
         # Read Tip Force
-        tip_forces = observation["observation"]["tip_force"] - self.force_offset
+        tip_forces = observation["observation"]["tip_force"] - \
+            self.force_offset
         switch = True
         for f in tip_forces:
             if f < 0.1:
@@ -304,7 +307,7 @@ class StateSpacePolicy:
             self.k_p = 0.65
             self.ctr = 0
             # self.do_premanip = False
-            self.interval = 1000
+            self.interval = 250
 
         return self.k_p * err
 
@@ -316,7 +319,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
-        k_p = min(6.0, self.k_p)
+        k_p = min(8.0, self.k_p)
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
@@ -340,8 +343,8 @@ class StateSpacePolicy:
             current[3*self.manip_arm:3*self.manip_arm+2] - observation["achieved_goal"]["position"][:2])
         #print("Diff: " + str(diff))
 
-        print("[GOAL] Rot err magnitude ", np.linalg.norm(rot_err), " Diff", diff," K_p ",
-                  self.k_p, " time: ", time.time() - self.start_time)
+        print("[GOAL] Rot err magnitude ", np.linalg.norm(rot_err), " Diff", diff, " K_p ",
+              self.k_p, " time: ", time.time() - self.start_time)
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 30.0:
             self.state = States.RESET
@@ -357,14 +360,15 @@ class StateSpacePolicy:
 
         #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
         # TODO: tweak the factor here
-        factor = 0.8 # 0.5 previously
+        factor = 1.0  # 0.5 previously
         if diff < factor * self.CUBE_SIZE:
             print("PRE ORIENT")
             self.state = States.ORIENT
             print("[GOAL]: Switching to PRE ORIENT")
             print("[GOAL]: K_p ", self.k_p)
             print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.5
+            self.k_p = 0.3
+            self.interval = 500
             self.ctr = 0
 
         # Once high enough, drop
@@ -397,7 +401,8 @@ class StateSpacePolicy:
         err = current - desired
 
         # Read Tip Force
-        tip_forces = observation["observation"]["tip_force"] - self.force_offset
+        tip_forces = observation["observation"]["tip_force"] - \
+            self.force_offset
         switch = False
         for f in tip_forces:
             if f < 0.1:
@@ -407,6 +412,7 @@ class StateSpacePolicy:
             print("MANIP DONE")
             self.state = States.RESET
             self.k_p = 1.2
+            self.interval = 200
             self.ctr = 0
 
         return self.k_p * err
@@ -492,7 +498,8 @@ class StateSpacePolicy:
             self.state = States.LOWER
             print("[ALIGN]: Switching to LOWER")
             print("[ALIGN]: K_p ", self.k_p)
-            print("[ALIGN]: Cube pos ", curr_cube_position, " Orient: ", curr_cube_orient)
+            print("[ALIGN]: Cube pos ", curr_cube_position,
+                  " Orient: ", curr_cube_orient)
             self.k_p = 1.2
             self.ctr = 0
 

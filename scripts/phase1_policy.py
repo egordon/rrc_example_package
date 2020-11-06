@@ -302,6 +302,7 @@ class StateSpacePolicy:
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
+            self.interval = 1000
 
         return self.k_p * err
 
@@ -332,6 +333,9 @@ class StateSpacePolicy:
         diff = np.linalg.norm(
             current[3*self.manip_arm:3*self.manip_arm+2] - observation["achieved_goal"]["position"][:2])
         #print("Diff: " + str(diff))
+
+        print("[GOAL] Rot err magnitude ", np.linalg.norm(rot_err), " K_p ",
+                  self.k_p, " time: ", time.time() - self.start_time)
 
         #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
         if diff < 0.5 * self.CUBE_SIZE:

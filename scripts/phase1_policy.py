@@ -197,7 +197,6 @@ class StateSpacePolicy:
 
     def prealign(self, observation):
         # get mean cube pose
-        print ("IN PRE ALIGN")
         self.cube_position.append(observation["achieved_goal"]["position"])
         self.cube_orient.append(observation["achieved_goal"]["orientation"])
         curr_cube_position = np.mean(np.array(self.cube_position), axis=0)
@@ -295,6 +294,7 @@ class StateSpacePolicy:
             switch = True
 
         if switch:
+            self.pregoal_state = observation["achieved_goal"]["position"]
             self.state = States.GOAL
             print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
             print("[INTO]: Switching to PRE GOAL")

@@ -220,7 +220,7 @@ class StateSpacePolicy:
         desired = np.tile(curr_cube_position, 3) + \
             (self.CUBE_SIZE + 0.015) * np.hstack(locs)
 
-        desired[::3] -= 0.015 * np.hstack(locs)[::3]
+        # desired[::3] -= 0.015 * np.hstack(locs)[::3]
 
         err = desired - current
         if np.linalg.norm(err) < 0.02:

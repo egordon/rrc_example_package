@@ -218,7 +218,7 @@ class StateSpacePolicy:
             locs[index][2] = 2
 
         desired = np.tile(curr_cube_position, 3) + \
-            self.CUBE_SIZE * np.hstack(locs)
+            (self.CUBE_SIZE + 0.015) * np.hstack(locs)
 
         err = desired - current
         if np.linalg.norm(err) < 0.02:
@@ -362,7 +362,7 @@ class StateSpacePolicy:
         # if np.amax(diff) < 1e-6:
         #    switch = True
 
-        return 0.15 * into_err + self.k_p * goal_err + 0.35 * rot_err
+        return 0.25 * into_err + self.k_p * goal_err + 0.35 * rot_err
 
     def preorient(self, observation):
         # Return torque for into step
@@ -661,7 +661,7 @@ class StateSpacePolicy:
         force = np.zeros(9)
 
         if self.do_premanip:
-            print ("do premanip")
+            # print ("do premanip")
             force = self.premanip(observation)
 
         elif self.state == States.RESET:

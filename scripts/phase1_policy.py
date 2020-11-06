@@ -316,7 +316,7 @@ class StateSpacePolicy:
         # Lower force of manip arm
         into_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0
 
-        goal = self.pregoal_state
+        goal = np.array(self.pregoal_state)
         goal[2] = 3 * self.CUBE_SIZE
         goal = np.tile(goal, 3)
         goal_err = goal - desired

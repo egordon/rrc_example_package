@@ -304,6 +304,7 @@ class StateSpacePolicy:
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
+            self.do_premanip = False
             self.interval = 1000
 
         return self.k_p * err
@@ -348,7 +349,7 @@ class StateSpacePolicy:
             print("[GOAL]: Switching to RESET")
             print("[GOAL]: K_p ", self.k_p)
             print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.5
+            self.k_p = 0.8
             self.interval = 100
             self.gain_increase_factor = 1.2
             self.ctr = 0

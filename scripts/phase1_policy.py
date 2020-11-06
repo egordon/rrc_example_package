@@ -103,6 +103,8 @@ class StateSpacePolicy:
         self.success_ctr = 0
         self.cube_position = deque(maxlen=100)
         self.cube_orient = deque(maxlen=100)
+        self.pregoal_reached = False
+        self.pregoal_begin_time = None
 
     def _calculate_premanip(self, observation):
         current = observation["achieved_goal"]["orientation"]
@@ -307,10 +309,14 @@ class StateSpacePolicy:
         return self.k_p * err
 
     def pregoal(self, observation):
+        if self.pregoal_begin_time is None:
+            self.pregoal_begin_time = time.time()
+
         # Return torque for goal step
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
+        k_p = min(5.0, self.k_p)
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
@@ -334,8 +340,19 @@ class StateSpacePolicy:
             current[3*self.manip_arm:3*self.manip_arm+2] - observation["achieved_goal"]["position"][:2])
         #print("Diff: " + str(diff))
 
-        print("[GOAL] Rot err magnitude ", np.linalg.norm(rot_err), " K_p ",
+        print("[GOAL] Rot err magnitude ", np.linalg.norm(rot_err), " Diff", diff," K_p ",
                   self.k_p, " time: ", time.time() - self.start_time)
+
+        if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 30.0:
+            self.state = States.RESET
+            print("[GOAL]: Switching to RESET")
+            print("[GOAL]: K_p ", self.k_p)
+            print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.interval = 100
+            self.gain_increase_factor = 1.2
+            self.ctr = 0
+            self.goal_begin_time = None
 
         #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
         if diff < 0.5 * self.CUBE_SIZE:
@@ -366,7 +383,7 @@ class StateSpacePolicy:
         # if np.amax(diff) < 1e-6:
         #    switch = True
 
-        return 0.25 * into_err + self.k_p * goal_err + 0.35 * rot_err
+        return 0.25 * into_err + k_p * goal_err + 0.35 * rot_err
 
     def preorient(self, observation):
         # Return torque for into step

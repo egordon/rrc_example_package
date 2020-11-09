@@ -15,6 +15,7 @@ from scipy.spatial.transform import Rotation as R
 from trifinger_simulation import trifingerpro_limits
 from trifinger_simulation.tasks import move_cube
 
+from utils import pitch_orient
 
 class States(enum.Enum):
     """ Different States for StateSpacePolicy """
@@ -105,57 +106,10 @@ class StateSpacePolicy:
         self.cube_orient = deque(maxlen=100)
         self.pregoal_reached = False
         self.pregoal_begin_time = None
-
-    def _calculate_premanip(self, observation):
-        current = observation["achieved_goal"]["orientation"]
-        target = observation["desired_goal"]["orientation"]
-
-        # Sets pre-manipulation 90 or 180-degree rotation
-        self.manip_angle = 0
-        self.manip_axis = np.zeros(3)
-        self.manip_arm = 0
-
-        minAngle, _ = _get_angle_axis(current, target)
-
-        # Check 90-degree rotations
-        for axis in [np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([-1, 0, 0]), np.array([0, -1, 0])]:
-            new_axis = R.from_quat(current).apply(axis)
-            rotation = R.from_rotvec(np.pi / 2 * new_axis)
-            new_current = rotation * R.from_quat(current)
-
-            angle, _ = _get_angle_axis(new_current.as_quat(), target)
-            if angle < minAngle:
-                minAngle = angle
-                self.manip_angle = 90
-                self.manip_axis = new_axis
-
-        # Check 180 degree rotation
-        # NO TIME FOR 180
-        new_axis = R.from_quat(current).apply(np.array([1, 0, 0]))
-        rotation = R.from_rotvec(np.pi * new_axis)
-        new_current = rotation * R.from_quat(current)
-        angle, _ = _get_angle_axis(new_current.as_quat(), target)
-        if angle < minAngle:
-            minAngle = angle
-            self.manip_angle = 180
-            self.manip_axis = new_axis
-
-        # Determine rotation arm
-        arm_angle = np.arctan2(
-            self.manip_axis[1], self.manip_axis[0]) + np.pi/2
-        if arm_angle > np.pi:
-            arm_angle -= 2*np.pi
-        print("Arm Angle: " + str(arm_angle))
-
-        if arm_angle < (np.pi/2 + np.pi/3) and arm_angle > (np.pi/2 - np.pi/3):
-            self.manip_arm = 0
-        elif arm_angle > (-np.pi/2) and arm_angle < (np.pi/2 - np.pi/3):
-            self.manip_arm = 1
-        else:
-            self.manip_arm = 2
-
-        print("Manip Arm: " + str(self.manip_arm))
-        print("Manip Angle: " + str(self.manip_angle))
+        # orient vars
+        self.manip_angle = None
+        self.manip_arm = None
+        self.manip_axis = None
 
     def _get_gravcomp(self, observation):
         # Returns: 9 torques required for grav comp
@@ -462,7 +416,7 @@ class StateSpacePolicy:
         if self.manip_angle == 0:
             # verify
             print ("Verify premanip")
-            self._calculate_premanip(observation)
+            self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)
             if self.manip_angle == 0:
                 self.do_premanip = False
                 self.state = States.ALIGN
@@ -484,7 +438,7 @@ class StateSpacePolicy:
         if np.linalg.norm(err) < 0.02:
             if self.difficulty == 4:
                 print ("[RESET] Verify premanip")
-                self._calculate_premanip(observation)
+                self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)
                 if self.manip_angle != 0:
                     self.do_premanip = True
                 else:

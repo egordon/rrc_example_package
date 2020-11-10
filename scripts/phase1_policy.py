@@ -85,7 +85,7 @@ class StateSpacePolicy:
 
         if difficulty == 4:
             # Do Pre-manpulation
-            self.do_premanip = True
+            self.do_premanip = False
             self._calculate_premanip(observation)
         else:
             self.do_premanip = False

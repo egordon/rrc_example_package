@@ -33,66 +33,46 @@ def _get_angle_axis(current, target):
 
 
 def pitch_orient(observation):
-    current = observation["achieved_goal"]["orientation"]
-    target = observation["desired_goal"]["orientation"]
-
-    # Sets pre-manipulation 90 or 180-degree rotation
     manip_angle = 0
     manip_axis = np.zeros(3)
     manip_arm = 0
+    current = observation["achieved_goal"]["orientation"]
+    target = observation["desired_goal"]["orientation"]
 
-    # angle between current and goal orientation
-    minAngle, _ = _get_angle_axis(current, target)
+    axes = np.eye(3)
+    axes = np.concatenate((axes, -1 * np.eye(3)), axis=0)
+    z_axis = [0., 0., 1.]
+    min_angle = 100.
+    min_axis_id = 0
+    for i, axis in enumerate(axes):
+        qg_i = R.from_quat(target).apply(axis)
+        angle = np.arccos(np.dot(qg_i, z_axis))
+        if angle < min_angle:
+            min_angle = angle
+            min_axis_id = i
 
-    # Check 90-degree rotations
-    # Find face having min angle with goal orientation
-    for axis in [np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([-1, 0, 0]), np.array([0, -1, 0])]:
-        new_axis = R.from_quat(current).apply(axis)
-        rotation = R.from_rotvec(np.pi / 2 * new_axis)
-        new_current = rotation * R.from_quat(current)
-        new_c1 = R.from_rotvec(new_axis)
-
-        angle_wo_rot, _ = _get_angle_axis(new_c1.as_quat(), target)
-        angle_with_rot, _ = _get_angle_axis(new_current.as_quat(), target)
-
-        if angle_wo_rot < angle_with_rot:
-            if angle_wo_rot < minAngle:
-                minAngle = angle_wo_rot
-                manip_angle = 0
-
-        if angle_with_rot < minAngle:
-            minAngle = angle_with_rot
-            manip_angle = 90
-            manip_axis = new_axis
-
-    # Check 180 degree rotation
-    # NO TIME FOR 180
-    new_axis = R.from_quat(current).apply(np.array([1, 0, 0]))
-    rotation = R.from_rotvec(np.pi * new_axis)
-    new_current = rotation * R.from_quat(current)
-    angle, _ = _get_angle_axis(new_current.as_quat(), target)
-    if angle < minAngle:
-        minAngle = angle
+    manip_axis = R.from_quat(current).apply(axes[min_axis_id])
+    if np.abs(1 - manip_axis[2]) < 0.03:
+        manip_angle = 0
+    elif np.abs(-1 - manip_axis[2]) < 0.03:
         manip_angle = 180
-        manip_axis = new_axis
-
-    # Determine rotation arm
-    arm_angle = np.arctan2(
-        manip_axis[1], manip_axis[0]) + np.pi/2
-    if arm_angle > np.pi:
-        arm_angle -= 2*np.pi
-    print("Arm Angle: " + str(arm_angle))
-
-    # how?
-    if arm_angle < (np.pi/2 + np.pi/3) and arm_angle > (np.pi/2 - np.pi/3):  # 30 to 150
-        manip_arm = 0
-    elif arm_angle > (-np.pi/2) and arm_angle < (np.pi/2 - np.pi/3):  # -90 to 30
-        manip_arm = 1
     else:
-        manip_arm = 2
+        manip_angle = 90
 
-    print("Manip Arm: " + str(manip_arm))
-    print("Manip Angle: " + str(manip_angle))
+    if manip_angle in [90, 180]:
+        arm_angle = np.arctan2(
+            manip_axis[1], manip_axis[0]) + np.pi/2
+        if arm_angle > np.pi:
+            arm_angle -= 2*np.pi
+
+        if arm_angle < (np.pi/2 + np.pi/3) and arm_angle > (np.pi/2 - np.pi/3):  # 30 to 150
+            manip_arm = 0
+        elif arm_angle > (-np.pi/2) and arm_angle < (np.pi/2 - np.pi/3):  # -90 to 30
+            manip_arm = 1
+        else:
+            manip_arm = 2
+
+    print("Manip angle: ", manip_angle, " Manip arm: ", manip_arm)
     return manip_angle, manip_axis, manip_arm
 
 

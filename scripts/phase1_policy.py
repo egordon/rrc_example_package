@@ -317,7 +317,7 @@ class StateSpacePolicy:
         #print("Diff: " + str(diff))
 
         print("[GOAL] Rot err magnitude ", np.linalg.norm(rot_err), " Diff", diff, " K_p ",
-              self.k_p, " time: ", time.time() - self.start_time)
+              self.k_p, " time: ", time.time() - self.start_time, " orient: ", observation["achieved_goal"]["orientation"])
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:
             self.state = States.RESET

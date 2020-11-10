@@ -51,7 +51,7 @@ def pitch_orient(observation):
         rotation = R.from_rotvec(np.pi / 2 * new_axis)
         new_current = rotation * R.from_quat(current)
 
-        angle_wo_rot, _ = _get_angle_axis(new_axis.as_quat(), target)
+        angle_wo_rot, _ = _get_angle_axis(new_axis, target)
         angle_with_rot, _ = _get_angle_axis(new_current.as_quat(), target)
 
         if angle_wo_rot < angle_with_rot:

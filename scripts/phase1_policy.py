@@ -321,6 +321,7 @@ class StateSpacePolicy:
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:
             self.state = States.RESET
+            time.sleep(3.0)
             print("[GOAL]: Switching to RESET")
             print("[GOAL]: K_p ", self.k_p)
             print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])

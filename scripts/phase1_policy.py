@@ -206,12 +206,10 @@ class StateSpacePolicy:
                 R.from_rotvec(
                     np.pi/2 * i * np.array([0, 0, 1])).apply(self.manip_axis)
 
-        locs[self.manip_arm][2] += 0.4
+        locs[self.manip_arm][2] += 0.7
 
         desired = np.tile(curr_cube_position, 3) + \
             self.CUBE_SIZE * np.hstack(locs)
-        
-        desired[self.manip_arm * 3: (self.manip_arm + 1)*3] = [0.5, 1.2, -2.4]
 
         err = desired - current
         if np.linalg.norm(err) < 0.02:

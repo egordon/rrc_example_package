@@ -52,6 +52,9 @@ def pitch_orient(observation):
         new_current = rotation * R.from_quat(current)
 
         angle, _ = _get_angle_axis(new_current.as_quat(), target)
+        target_eul = R.from_quat(target).as_euler('xyz')
+        new_current_eul = new_current.as_euler('xyz')
+        angle = (target_eul - new_current_eul)[1]
         if angle < minAngle:
             minAngle = angle
             manip_angle = 90

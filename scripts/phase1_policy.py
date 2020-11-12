@@ -412,13 +412,13 @@ class StateSpacePolicy:
             # print("do preinto")
             force = self.preinto(observation)
 
-        elif self.state == States.GOAL:
-            # print("do pregoal")
-            force = self.pregoal(observation)
+        # elif self.state == States.GOAL:
+        #     # print("do pregoal")
+        #     force = self.pregoal(observation)
 
-        elif self.state == States.ORIENT:
-            # print("do preorient")
-            force = self.preorient(observation)
+        # elif self.state == States.ORIENT:
+        #     # print("do preorient")
+        #     force = self.preorient(observation)
 
         if self.manip_angle == 0:
             # verify

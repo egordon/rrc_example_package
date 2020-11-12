@@ -348,7 +348,10 @@ class StateSpacePolicy:
         # TODO: tweak the factor here
         factor = 0.7  # 0.5 previously
         # if diff < factor * self.CUBE_SIZE:
-        err_mag = np.linalg.norm(goal_err[:3])
+        if self.manip_arm == 0:
+            err_mag = np.linalg.norm(goal_err[3:6])
+        else:
+            err_mag = np.linalg.norm(goal_err[:3])
         if err_mag < 0.01:
             self.success_ctr_pitch_orient += 1
         if err_mag < 0.01 and self.success_ctr_pitch_orient > 20:

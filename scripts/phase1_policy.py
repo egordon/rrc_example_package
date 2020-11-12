@@ -220,7 +220,8 @@ class StateSpacePolicy:
             print("[LOWER]: Cube pos ", curr_cube_position)
             print("[LOWER]: Current Tip Forces ",
                   observation["observation"]["tip_force"])
-            self.k_p = 1.2
+            self.k_p = 1.0
+            self.interval = 400
             self.ctr = 0
             self.cube_position.clear()
             self.cube_orient.clear()
@@ -234,13 +235,13 @@ class StateSpacePolicy:
                       for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
         k_p = min(6.0, self.k_p)
-        if any(y < 0.0001 for y in difference):
-            self.state = States.RESET
-            print("[INTO]: Switching to RESET")
-            print("[INTO]: K_p ", self.k_p)
-            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.5
-            self.ctr = 0
+        # if any(y < 0.0001 for y in difference):
+        #     self.state = States.RESET
+        #     print("[INTO]: Switching to RESET")
+        #     print("[INTO]: K_p ", self.k_p)
+        #     print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+        #     self.k_p = 0.5
+        #     self.ctr = 0
 
         x, y, z = observation["achieved_goal"]["position"]
         z = self.CUBE_SIZE

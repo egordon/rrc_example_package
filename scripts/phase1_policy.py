@@ -206,7 +206,7 @@ class StateSpacePolicy:
                 R.from_rotvec(
                     np.pi/2 * i * np.array([0, 0, 1])).apply(self.manip_axis)
 
-        locs[self.manip_arm][2] += 1.4
+        locs[self.manip_arm][2] += 1.8
 
         desired = np.tile(curr_cube_position, 3) + \
             self.CUBE_SIZE * np.hstack(locs)
@@ -233,7 +233,7 @@ class StateSpacePolicy:
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
-        k_p = min(15.0, self.k_p)
+        k_p = min(6.0, self.k_p)
         if any(y < 0.0001 for y in difference):
             self.state = States.RESET
             print("[INTO]: Switching to RESET")
@@ -245,7 +245,7 @@ class StateSpacePolicy:
         x, y, z = observation["achieved_goal"]["position"]
         z = self.CUBE_SIZE
         desired = np.tile([x, y, z], 3)
-        desired[3*self.manip_arm+2] += 0.4*self.CUBE_SIZE
+        desired[3*self.manip_arm+2] += 0.8*self.CUBE_SIZE
 
         err = desired - current
 

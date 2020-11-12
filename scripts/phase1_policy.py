@@ -277,8 +277,9 @@ class StateSpacePolicy:
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
+            self.gain_increase_factor = 1.08
             # self.do_premanip = False
-            self.interval = 250
+            self.interval = 1500
 
         self.goal_err_sum = np.zeros(9)
         return self.k_p * err
@@ -291,7 +292,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
-        k_p = min(4.0, self.k_p)
+        k_p = min(3.5, self.k_p)
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)

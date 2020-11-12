@@ -247,7 +247,7 @@ class StateSpacePolicy:
         z = self.CUBE_SIZE
         desired = np.tile([x, y, z], 3)
         desired[3*self.manip_arm+2] += 0.8*self.CUBE_SIZE
-        desired[3*self.manip_arm: 3*self.manip_arm + 2] -= 0.3*self.CUBE_SIZE
+        desired[3*self.manip_arm: 3*self.manip_arm + 2] -= 0.4*self.CUBE_SIZE
 
         err = desired - current
 
@@ -261,7 +261,7 @@ class StateSpacePolicy:
         for i, f in enumerate(tip_forces):
             if i == self.manip_arm:
                 continue
-            if f < 0.1:
+            if f < 0.07:
                 switch = False
 
         # Override with small diff
@@ -271,8 +271,8 @@ class StateSpacePolicy:
         # if np.amax(diff) < 5e-5:
         #     switch = True
 
-        if switch:
-            self.gain_increase_factor = 1.00
+        # if switch:
+        #     self.gain_increase_factor = 1.00
 
         if switch:
             self.pregoal_state = observation["achieved_goal"]["position"]

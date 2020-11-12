@@ -206,7 +206,7 @@ class StateSpacePolicy:
                 R.from_rotvec(
                     np.pi/2 * i * np.array([0, 0, 1])).apply(self.manip_axis)
 
-        locs[self.manip_arm][2] += 1.8
+        locs[self.manip_arm][2] += 2.
 
         desired = np.tile(curr_cube_position, 3) + \
             self.CUBE_SIZE * np.hstack(locs)
@@ -246,11 +246,12 @@ class StateSpacePolicy:
         z = self.CUBE_SIZE
         desired = np.tile([x, y, z], 3)
         desired[3*self.manip_arm+2] += 0.8*self.CUBE_SIZE
+        desired[3*self.manip_arm: 3*self.manip_arm + 2] -= 0.3*self.CUBE_SIZE
 
         err = desired - current
 
         # Lower force of manip arm
-        err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.2
+        err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.4
 
         # Read Tip Force
         tip_forces = observation["observation"]["tip_force"] - \
@@ -290,7 +291,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
-        k_p = min(5.0, self.k_p)
+        k_p = min(4.0, self.k_p)
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
@@ -301,7 +302,7 @@ class StateSpacePolicy:
         goal[2] = 3 * self.CUBE_SIZE
         goal = np.tile(goal, 3)
         goal_err = goal - desired
-        goal_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0
+        goal_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.1
 
         err_mag = np.linalg.norm(goal_err[:3])
         if err_mag < 0.1:

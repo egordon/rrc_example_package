@@ -524,7 +524,10 @@ class StateSpacePolicy:
         # if any(y < 0.02 for y in difference):
         #     self.state = States.ALIGN
         #     return 0.0
-        k_p = min(2.5, self.k_p)
+        if difficulty == 1:
+            k_p = min(0.75, self.k_p)
+        else:
+            k_p = min(2.5, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         into_err = desired - current

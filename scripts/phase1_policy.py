@@ -292,7 +292,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
-        k_p = min(3.5, self.k_p)
+        k_p = min(2.5, self.k_p)
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
@@ -300,7 +300,7 @@ class StateSpacePolicy:
         into_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0
 
         goal = np.array(self.pregoal_state)
-        goal[2] = 3 * self.CUBE_SIZE
+        goal[2] = 5 * self.CUBE_SIZE
         goal = np.tile(goal, 3)
         goal_err = goal - desired
         goal_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.1
@@ -345,7 +345,7 @@ class StateSpacePolicy:
             print("[GOAL]: K_p ", self.k_p)
             print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.3
-            self.interval = 500
+            self.interval = 1000
             self.ctr = 0
 
         # Once high enough, drop
@@ -372,7 +372,7 @@ class StateSpacePolicy:
     def preorient(self, observation):
         # Return torque for into step
         current = self._get_tip_poses(observation)
-        k_p = min(self.k_p, 6.0)
+        k_p = min(self.k_p, 3.0)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         err = current - desired
@@ -384,7 +384,8 @@ class StateSpacePolicy:
         for f in tip_forces:
             if f < 0.1:
                 switch = True
-        if switch:
+        angle, _, __ = pitch_orient(observation)
+        if switch and angle == 0:
             self.manip_angle -= 90
             print("MANIP DONE")
             self.state = States.GOAL

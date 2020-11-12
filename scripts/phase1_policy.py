@@ -344,7 +344,8 @@ class StateSpacePolicy:
         #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
         # TODO: tweak the factor here
         factor = 0.7  # 0.5 previously
-        if diff < factor * self.CUBE_SIZE:
+        # if diff < factor * self.CUBE_SIZE:
+        if goal_err < 0.01:
             # print("PRE ORIENT")
             self.state = States.ORIENT
             print("[GOAL]: Switching to PRE ORIENT")

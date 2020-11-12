@@ -242,13 +242,15 @@ class StateSpacePolicy:
             self.k_p = 0.5
             self.ctr = 0
 
-        desired = np.tile(observation["achieved_goal"]["position"], 3)
+        x, y, z = observation["achieved_goal"]["position"]
+        z = self.CUBE_SIZE
+        desired = np.tile([x, y, z], 3)
         desired[3*self.manip_arm+2] += 0.4*self.CUBE_SIZE
 
         err = desired - current
 
         # Lower force of manip arm
-        err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.5
+        err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.2
 
         # Read Tip Force
         tip_forces = observation["observation"]["tip_force"] - \

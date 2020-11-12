@@ -496,7 +496,7 @@ class StateSpacePolicy:
             self.force_offset
         switch = True
         for f in tip_forces:
-            if f < 0.1:
+            if f < 0.08:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -535,7 +535,7 @@ class StateSpacePolicy:
 
         goal = np.tile(observation["desired_goal"]["position"], 3)
         if self.difficulty == 1:
-            goal[2] += 0.001  # Reduces friction with floor
+            goal[2] += 0.002  # Reduces friction with floor
         goal_err = goal - desired
         err_mag = np.linalg.norm(goal_err[:3])
 

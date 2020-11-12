@@ -306,7 +306,7 @@ class StateSpacePolicy:
         into_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0
 
         goal = np.array(self.pregoal_state)
-        goal[2] = 5 * self.CUBE_SIZE
+        goal[2] = 4 * self.CUBE_SIZE
         goal = np.tile(goal, 3)
         goal_err = goal - desired
         goal_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.1
@@ -326,7 +326,7 @@ class StateSpacePolicy:
             current[3*self.manip_arm:3*self.manip_arm+2] - observation["achieved_goal"]["position"][:2])
         #print("Diff: " + str(diff))
 
-        print("[GOAL] Rot err magnitude ", np.linalg.norm(rot_err), " Diff", diff, " K_p ",
+        print("[GOAL] Goal err magnitude ", np.linalg.norm(goal_err[:3]), " Diff", diff, " K_p ",
               self.k_p, " time: ", time.time() - self.start_time, " orient: ", observation["achieved_goal"]["orientation"])
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:

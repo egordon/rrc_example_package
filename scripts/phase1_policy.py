@@ -61,7 +61,7 @@ class StateSpacePolicy:
         self.finger = env.sim_platform.simfinger
         self.iterm_align = 0.
         self.last_align_error = 0.
-        self.k_p = 1.1
+        self.k_p = 0.4
         self.ctr = 0
         self.force_offset = None
         self.interval = 100
@@ -454,9 +454,8 @@ class StateSpacePolicy:
             self.state = States.LOWER
             print("[ALIGN]: Switching to LOWER")
             print("[ALIGN]: K_p ", self.k_p)
-            print("[ALIGN]: Cube pos ", curr_cube_position,
-                  " Orient: ", curr_cube_orient)
-            self.k_p = 1.2
+            print("[ALIGN]: Cube pos ", curr_cube_position)
+            self.k_p = 0.7
             self.ctr = 0
 
         delta_err = err - self.last_align_error
@@ -489,7 +488,7 @@ class StateSpacePolicy:
             print("[LOWER]: Cube pos ", curr_cube_position)
             print("[LOWER]: Current Tip Forces ",
                   observation["observation"]["tip_force"])
-            self.k_p = 1.2
+            self.k_p = 0.7
             self.ctr = 0
 
         return self.k_p * err
@@ -532,8 +531,8 @@ class StateSpacePolicy:
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
-            self.gain_increase_factor = 1.08
-            self.interval = 2500
+            self.gain_increase_factor = 1.05
+            self.interval = 1200
 
         self.goal_err_sum = np.zeros(9)
         return k_p * err
@@ -550,7 +549,10 @@ class StateSpacePolicy:
         # if any(y < 0.02 for y in difference):
         #     self.state = States.ALIGN
         #     return 0.0
-        k_p = min(2.5, self.k_p)
+        if self.difficulty == 1:
+            k_p = min(0.76, self.k_p)
+        else:
+            k_p = min(2.5, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         into_err = desired - current
@@ -610,7 +612,7 @@ class StateSpacePolicy:
             self.gain_increase_factor = 1.0
 
         # k_p = 0.65
-        return k_p * goal_err + 0.30 * into_err + 0.002 * self.goal_err_sum
+        return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 
     def orient(self, observation):
         # Return torque for lower step

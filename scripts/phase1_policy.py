@@ -345,7 +345,7 @@ class StateSpacePolicy:
         # TODO: tweak the factor here
         factor = 0.7  # 0.5 previously
         # if diff < factor * self.CUBE_SIZE:
-        err_mag = np.linalg.norm(goal_err[3*self.manip_arm: 3*(self.manip_arm + 1)])
+        err_mag = np.linalg.norm(goal_err[:3])
         if err_mag < 0.01:
             # print("PRE ORIENT")
             self.state = States.ORIENT

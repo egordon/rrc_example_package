@@ -61,7 +61,10 @@ def pitch_orient(observation):
 
     if manip_angle in [90, 180]:
         arm_angle = np.arctan2(
-            manip_axis[1], manip_axis[0]) + np.pi/2
+            manip_axis[1], manip_axis[0])
+        
+        print ("arm angle: ", arm_angle, " ax: ", manip_axis)
+        arm_angle += np.pi/2
         if arm_angle > np.pi:
             arm_angle -= 2*np.pi
 

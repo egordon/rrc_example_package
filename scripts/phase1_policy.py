@@ -323,7 +323,6 @@ class StateSpacePolicy:
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:
             self.state = States.RESET
-            time.sleep(3.0)
             print("[GOAL]: Switching to RESET")
             print("[GOAL]: K_p ", self.k_p)
             print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
@@ -440,6 +439,7 @@ class StateSpacePolicy:
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
             if self.difficulty == 4:
+                time.sleep(4.0)
                 print ("[RESET] Verify premanip")
                 self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)
                 if self.manip_angle != 0:

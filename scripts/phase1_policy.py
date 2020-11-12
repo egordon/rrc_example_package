@@ -506,8 +506,8 @@ class StateSpacePolicy:
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
-            self.gain_increase_factor = 1.05
-            self.interval = 1200
+            self.gain_increase_factor = 1.04
+            self.interval = 1800
 
         self.goal_err_sum = np.zeros(9)
         return k_p * err
@@ -542,7 +542,11 @@ class StateSpacePolicy:
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
 
-        if not self.goal_reached and time.time() - self.goal_begin_time > 30.0:
+        if self.difficulty == 1:
+            time_threshold = 20.0
+        else:
+            time_threshold = 30.0
+        if not self.goal_reached and time.time() - self.goal_begin_time > time_threshold:
             self.state = States.RESET
             print("[GOAL]: Switching to RESET")
             print("[GOAL]: K_p ", self.k_p)
@@ -678,7 +682,7 @@ def main():
     # goal = json.loads(goal_pose_json)
 
     # TODO: Comment before submission
-    difficulty = 1
+    difficulty = 3
     goal_pose = move_cube.sample_goal(difficulty)
     goal = {'position': goal_pose.position,
             'orientation': goal_pose.orientation}

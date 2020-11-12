@@ -15,7 +15,7 @@ from scipy.spatial.transform import Rotation as R
 from trifinger_simulation import trifingerpro_limits
 from trifinger_simulation.tasks import move_cube
 
-from utils import pitch_orient
+from utils import pitch_orient, _get_angle_axis_top_only
 
 class States(enum.Enum):
     """ Different States for StateSpacePolicy """
@@ -36,37 +36,6 @@ class States(enum.Enum):
 
     #: Orient correctly
     ORIENT = enum.auto()
-
-
-def _quat_mult(q1, q2):
-    x0, y0, z0, w0 = q2
-    x1, y1, z1, w1 = q1
-    return np.array([x1 * w0 + y1 * z0 - z1 * y0 + w1 * x0,
-                     -x1 * z0 + y1 * w0 + z1 * x0 + w1 * y0,
-                     x1 * y0 - y1 * x0 + z1 * w0 + w1 * z0,
-                     -x1 * x0 - y1 * y0 - z1 * z0 + w1 * w0])
-
-
-def _quat_conj(q):
-    ret = np.copy(q)
-    ret[:3] *= -1
-    return ret
-
-
-def _get_angle_axis(current, target):
-    # Return:
-    # (1) angle err between orientations
-    # (2) Unit rotation axis
-    rot = R.from_quat(_quat_mult(current, _quat_conj(target)))
-
-    rotvec = rot.as_rotvec()
-    norm = np.linalg.norm(rotvec)
-
-    if norm > 1E-8:
-        return norm, (rotvec / norm)
-    else:
-        return 0, np.zeros(len(rotvec))
-
 
 class StateSpacePolicy:
     """Dummy policy which uses random actions."""
@@ -175,14 +144,12 @@ class StateSpacePolicy:
         desired = np.tile(curr_cube_position, 3) + \
             (self.CUBE_SIZE + 0.015) * np.hstack(locs)
 
-        # desired[self.manip_arm * 3: (self.manip_arm + 1)*3] = [0.5, 1.2, -2.4]
-
         err = desired - current
         if np.linalg.norm(err) < 0.01:
             self.state = States.LOWER
-            print("[ALIGN]: Switching to PRE LOWER")
-            print("[ALIGN]: K_p ", self.k_p)
-            print("[ALIGN]: Cube pos ", curr_cube_position)
+            print("[PRE ALIGN]: Switching to PRE LOWER")
+            print("[PRE ALIGN]: K_p ", self.k_p)
+            print("[PRE ALIGN]: Cube pos ", curr_cube_position)
             self.k_p = 1.2
             self.ctr = 0
 
@@ -218,10 +185,10 @@ class StateSpacePolicy:
         if np.linalg.norm(err) < 0.02:
             self.previous_state = observation["observation"]["position"]
             self.state = States.INTO
-            print("[LOWER]: Switching to PRE INTO")
-            print("[LOWER]: K_p ", self.k_p)
-            print("[LOWER]: Cube pos ", curr_cube_position)
-            print("[LOWER]: Current Tip Forces ",
+            print("[PRE LOWER]: Switching to PRE INTO")
+            print("[PRE LOWER]: K_p ", self.k_p)
+            print("[PRE LOWER]: Cube pos ", curr_cube_position)
+            print("[PRE LOWER]: Current Tip Forces ",
                   observation["observation"]["tip_force"])
             self.k_p = 1.0
             self.interval = 400
@@ -280,10 +247,10 @@ class StateSpacePolicy:
         if switch:
             self.pregoal_state = observation["achieved_goal"]["position"]
             self.state = States.GOAL
-            print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
-            print("[INTO]: Switching to PRE GOAL")
-            print("[INTO]: K_p ", self.k_p)
-            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            print("[PRE INTO] Tip Forces ", observation["observation"]["tip_force"])
+            print("[PRE INTO]: Switching to PRE GOAL")
+            print("[PRE INTO]: K_p ", self.k_p)
+            print("[PRE INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
             self.gain_increase_factor = 1.08
@@ -305,7 +272,7 @@ class StateSpacePolicy:
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
-        # Lower force of manip arm
+        # Into force of manip arm
         into_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0
 
         goal = np.array(self.pregoal_state)
@@ -332,9 +299,9 @@ class StateSpacePolicy:
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:
             self.state = States.RESET
-            print("[GOAL]: Switching to RESET")
-            print("[GOAL]: K_p ", self.k_p)
-            print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            print("[PRE GOAL]: Switching to RESET")
+            print("[PRE GOAL]: K_p ", self.k_p)
+            print("[PRE GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.interval = 100
             self.gain_increase_factor = 1.2
@@ -351,7 +318,7 @@ class StateSpacePolicy:
         else:
             err_mag = np.linalg.norm(goal_err[:3])
 
-        print("[GOAL] Goal err magnitude ", np.linalg.norm(goal_err[:3]), " Diff", diff, " K_p ",
+        print("[PRE GOAL] Goal err magnitude ", np.linalg.norm(goal_err[:3]), " Diff", diff, " K_p ",
               self.k_p, " time: ", time.time() - self.start_time, " orient: ", observation["achieved_goal"]["orientation"])
 
         if err_mag < 0.01:
@@ -359,31 +326,12 @@ class StateSpacePolicy:
         if err_mag < 0.01 and self.success_ctr_pitch_orient > 20:
             # print("PRE ORIENT")
             self.state = States.ORIENT
-            print("[GOAL]: Switching to PRE ORIENT")
-            print("[GOAL]: K_p ", self.k_p)
-            print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            print("[PRE GOAL]: Switching to PRE ORIENT")
+            print("[PRE GOAL]: K_p ", self.k_p)
+            print("[PRE GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.3
             self.interval = 1000
             self.ctr = 0
-
-        # Once high enough, drop
-        # if observation["achieved_goal"]["position"][2] > 2 * self.CUBE_SIZE:
-        #    print("PRE ORIENT")
-        #    self.state = States.ORIENT
-
-        # Override with no force on manip arm
-        #tip_forces = self.finger._get_latest_observation().tip_force
-        # for f in tip_forces:
-        #    if f < 0.051:
-        #        print("PRE ORIENT")
-        #        self.state = States.ORIENT
-
-        # Override with small diff
-        #diff = observation["observation"]["position"] - self.previous_state
-        #self.previous_state = observation["observation"]["position"]
-
-        # if np.amax(diff) < 1e-6:
-        #    switch = True
 
         return 0.15 * into_err + k_p * goal_err + 0.25 * rot_err #+  0.0005 * self.goal_err_sum
 
@@ -405,7 +353,7 @@ class StateSpacePolicy:
         angle, _, __ = pitch_orient(observation)
         if switch and angle == 0:
             self.manip_angle -= 90
-            print("MANIP DONE")
+            print("[PRE ORIENT] MANIP DONE")
             self.state = States.GOAL
             self.k_p = 1.2
             self.interval = 200
@@ -432,9 +380,9 @@ class StateSpacePolicy:
             # print("do pregoal")
             force = self.pregoal(observation)
 
-        # elif self.state == States.ORIENT:
-        #     # print("do preorient")
-        #     force = self.preorient(observation)
+        elif self.state == States.ORIENT:
+            # print("do preorient")
+            force = self.preorient(observation)
 
         if self.manip_angle == 0:
             # verify
@@ -680,7 +628,7 @@ class StateSpacePolicy:
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
 
-        angle, axis = _get_angle_axis(
+        angle, axis = _get_angle_axis_top_only(
             observation["achieved_goal"]["orientation"], observation["desired_goal"]["orientation"])
         ang_err = np.zeros(9)
         ang_err[:3] = -angle * \

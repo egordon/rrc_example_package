@@ -31,6 +31,49 @@ def _get_angle_axis(current, target):
     else:
         return 0, np.zeros(len(rotvec))
 
+def _get_angle_axis_top_only(current, target):
+    # Return:
+    # (1) angle err between orientations
+    # (2) Unit rotation axis
+
+    # Faces = +/-x, +/-y, +/-z
+    axes = np.eye(3)
+    axes = np.concatenate((axes, -1 * np.eye(3)), axis=0)
+
+    # See which face is on top of the goal cube
+    z_axis = [0., 0., 1.]
+    target_axis
+    min_angle = 100.
+    min_axis_id = 0
+    for i, axis in enumerate(axes):
+        qg_i = R.from_quat(target).apply(axis)
+        angle = np.arccos(np.dot(qg_i, z_axis))
+        if angle < min_angle:
+            min_angle = angle
+            min_axis_id = i
+            target_axis = qg_i
+
+    # See where that face is on the current cube
+    current_axis = R.from_quat(current).apply(axes[min_axis_id])
+
+    # Angle calculation
+    angle = np.arccos(np.dot(current_axis, target_axis))
+    if angle > 1.0:
+        angle = 1.0
+    if angle < -1.0:
+        angle = -1.0
+
+    # Get rotvec only for top of cube
+    rotvec = np.cross(current_axis, target_axis)
+    norm = np.linalg.norm(rotvec)
+
+    # Don't try if angle is too small or too big
+    if (norm <= 1E-8) or (angle > np.pi/2.0):
+        return 0, np.zeros(len(rotvec))
+    else:
+        return angle, (rotvec / norm)
+        
+
 
 def pitch_orient(observation):
     manip_angle = 0
@@ -39,8 +82,11 @@ def pitch_orient(observation):
     current = observation["achieved_goal"]["orientation"]
     target = observation["desired_goal"]["orientation"]
 
+    # Faces = +/-x, +/-y, +/-z
     axes = np.eye(3)
     axes = np.concatenate((axes, -1 * np.eye(3)), axis=0)
+
+    # See which face is on top of the goal cube
     z_axis = [0., 0., 1.]
     min_angle = 100.
     min_axis_id = 0
@@ -51,15 +97,38 @@ def pitch_orient(observation):
             min_angle = angle
             min_axis_id = i
 
+    # See where that face is on the current cube
     manip_axis = R.from_quat(current).apply(axes[min_axis_id])
     if np.abs(1 - manip_axis[2]) < 0.03:
+        # On top, no manipulation
         manip_angle = 0
     elif np.abs(-1 - manip_axis[2]) < 0.03:
+        # On bottom, need 2 90deg rotations
         manip_angle = 180
     else:
+        # On side, need 1 90deg rotation
         manip_angle = 90
 
-    if manip_angle in [90, 180]:
+    # For 180deg rotation, determine which side gets manipulated
+    # Since there are 2 options
+    if manip_angle == 180:
+        test_axis_id = (min_axis_id + 1) % len(axes)
+        test_manip_axis = R.from_quat(current).apply(axes[test_axis_id])
+        test_target_axis = R.from_quat(target).apply(axes[test_axis_id])
+
+        angle = np.arccos(np.dot(test_manip_axis, test_target_axis))
+
+        # If angle is small, manip the other axis
+        if angle < np.pi/2.0:
+            test_axis_id = (min_axis_id + 2) % len(axes)
+            test_manip_axis = R.from_quat(current).apply(axes[test_axis_id])
+
+        # Update manip axis to the correct side
+        manip_axis = test_manip_axis
+
+    
+    # Determine which arm gets the 90deg rotation
+    if manip_angle > 0:
         arm_angle = np.arctan2(
             manip_axis[1], manip_axis[0])
         
@@ -74,6 +143,9 @@ def pitch_orient(observation):
             manip_arm = 1
         else:
             manip_arm = 2
+
+    # Clear any weird "z" angle from manip axis
+    manip_axis[2] = 0
 
     print("Manip angle: ", manip_angle, " Manip arm: ", manip_arm)
     return manip_angle, manip_axis, manip_arm

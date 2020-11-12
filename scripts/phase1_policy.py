@@ -521,7 +521,7 @@ class StateSpacePolicy:
             self.force_offset
         switch = True
         for f in tip_forces:
-            if f < 0.1:
+            if f < 0.08:
                 switch = False
         if switch:
             self.state = States.GOAL
@@ -531,8 +531,8 @@ class StateSpacePolicy:
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
-            self.gain_increase_factor = 1.05
-            self.interval = 1200
+            self.gain_increase_factor = 1.04
+            self.interval = 1800
 
         self.goal_err_sum = np.zeros(9)
         return k_p * err
@@ -552,7 +552,7 @@ class StateSpacePolicy:
         if self.difficulty == 1:
             k_p = min(0.76, self.k_p)
         else:
-            k_p = min(2.5, self.k_p)
+            k_p = min(0.79, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         into_err = desired - current
@@ -560,14 +560,18 @@ class StateSpacePolicy:
 
         goal = np.tile(observation["desired_goal"]["position"], 3)
         if self.difficulty == 1:
-            goal[2] += 0.001  # Reduces friction with floor
+            goal[2] += 0.002  # Reduces friction with floor
         goal_err = goal - desired
         err_mag = np.linalg.norm(goal_err[:3])
 
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
 
-        if not self.goal_reached and time.time() - self.goal_begin_time > 30.0:
+        if self.difficulty == 1:
+            time_threshold = 20.0
+        else:
+            time_threshold = 30.0
+        if not self.goal_reached and time.time() - self.goal_begin_time > time_threshold:
             self.state = States.RESET
             print("[GOAL]: Switching to RESET")
             print("[GOAL]: K_p ", self.k_p)

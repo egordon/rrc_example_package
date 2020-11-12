@@ -257,7 +257,9 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"] - \
             self.force_offset
         switch = True
-        for f in tip_forces:
+        for i, f in enumerate(tip_forces):
+            if i == self.manip_arm:
+                continue
             if f < 0.1:
                 switch = False
 
@@ -265,8 +267,8 @@ class StateSpacePolicy:
         diff = observation["observation"]["position"] - self.previous_state
         self.previous_state = observation["observation"]["position"]
 
-        if np.amax(diff) < 5e-5:
-            switch = True
+        # if np.amax(diff) < 5e-5:
+        #     switch = True
 
         if switch:
             self.pregoal_state = observation["achieved_goal"]["position"]

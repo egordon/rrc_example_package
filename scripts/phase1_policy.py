@@ -235,7 +235,7 @@ class StateSpacePolicy:
                       for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
         k_p = min(6.0, self.k_p)
-        # if any(y < 0.0001 for y in difference):
+        # if all(y < 0.0001 for y in difference):
         #     self.state = States.RESET
         #     print("[INTO]: Switching to RESET")
         #     print("[INTO]: K_p ", self.k_p)
@@ -274,18 +274,18 @@ class StateSpacePolicy:
         if switch:
             self.gain_increase_factor = 1.00
 
-        # if switch:
-        #     self.pregoal_state = observation["achieved_goal"]["position"]
-        #     self.state = States.GOAL
-        #     print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
-        #     print("[INTO]: Switching to PRE GOAL")
-        #     print("[INTO]: K_p ", self.k_p)
-        #     print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-        #     self.k_p = 0.65
-        #     self.ctr = 0
-        #     self.gain_increase_factor = 1.08
-        #     # self.do_premanip = False
-        #     self.interval = 1500
+        if switch:
+            self.pregoal_state = observation["achieved_goal"]["position"]
+            self.state = States.GOAL
+            print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
+            print("[INTO]: Switching to PRE GOAL")
+            print("[INTO]: K_p ", self.k_p)
+            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.65
+            self.ctr = 0
+            self.gain_increase_factor = 1.08
+            # self.do_premanip = False
+            self.interval = 1500
 
         self.goal_err_sum = np.zeros(9)
         return self.k_p * err
@@ -416,9 +416,9 @@ class StateSpacePolicy:
             # print("do preinto")
             force = self.preinto(observation)
 
-        # elif self.state == States.GOAL:
-        #     # print("do pregoal")
-        #     force = self.pregoal(observation)
+        elif self.state == States.GOAL:
+            # print("do pregoal")
+            force = self.pregoal(observation)
 
         # elif self.state == States.ORIENT:
         #     # print("do preorient")

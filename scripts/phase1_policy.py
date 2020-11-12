@@ -329,8 +329,6 @@ class StateSpacePolicy:
             current[3*self.manip_arm:3*self.manip_arm+2] - observation["achieved_goal"]["position"][:2])
         #print("Diff: " + str(diff))
 
-        print("[GOAL] Goal err magnitude ", np.linalg.norm(goal_err[:3]), " Diff", diff, " K_p ",
-              self.k_p, " time: ", time.time() - self.start_time, " orient: ", observation["achieved_goal"]["orientation"])
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:
             self.state = States.RESET
@@ -352,6 +350,10 @@ class StateSpacePolicy:
             err_mag = np.linalg.norm(goal_err[3:6])
         else:
             err_mag = np.linalg.norm(goal_err[:3])
+
+        print("[GOAL] Goal err magnitude ", np.linalg.norm(goal_err[:3]), " Diff", diff, " K_p ",
+              self.k_p, " time: ", time.time() - self.start_time, " orient: ", observation["achieved_goal"]["orientation"])
+
         if err_mag < 0.01:
             self.success_ctr_pitch_orient += 1
         if err_mag < 0.01 and self.success_ctr_pitch_orient > 20:

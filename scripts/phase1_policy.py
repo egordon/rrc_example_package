@@ -527,7 +527,7 @@ class StateSpacePolicy:
         if self.difficulty == 1:
             k_p = min(0.76, self.k_p)
         else:
-            k_p = min(2.5, self.k_p)
+            k_p = min(0.79, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         into_err = desired - current

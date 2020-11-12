@@ -271,8 +271,8 @@ class StateSpacePolicy:
         diff = observation["observation"]["position"] - self.previous_state
         self.previous_state = observation["observation"]["position"]
 
-        # if np.amax(diff) < 5e-5:
-        #     switch = True
+        if np.amax(diff) < 5e-5:
+            switch = True
 
         # if switch:
         #     self.gain_increase_factor = 1.00

@@ -102,6 +102,7 @@ class StateSpacePolicy:
         self.goal_reached = False
         # to avoid completion because of error in cube position
         self.success_ctr = 0
+        self.success_ctr_pitch_orient = 0
         self.cube_position = deque(maxlen=100)
         self.cube_orient = deque(maxlen=100)
         self.pregoal_reached = False
@@ -210,6 +211,8 @@ class StateSpacePolicy:
 
         desired = np.tile(curr_cube_position, 3) + \
             self.CUBE_SIZE * np.hstack(locs)
+        
+        desired[3*self.manip_arm: 3*self.manip_arm + 2] -= 0.4*self.CUBE_SIZE
 
         err = desired - current
         if np.linalg.norm(err) < 0.02:
@@ -347,6 +350,8 @@ class StateSpacePolicy:
         # if diff < factor * self.CUBE_SIZE:
         err_mag = np.linalg.norm(goal_err[:3])
         if err_mag < 0.01:
+            self.success_ctr_pitch_orient += 1
+        if err_mag < 0.01 and self.success_ctr_pitch_orient > 20:
             # print("PRE ORIENT")
             self.state = States.ORIENT
             print("[GOAL]: Switching to PRE ORIENT")

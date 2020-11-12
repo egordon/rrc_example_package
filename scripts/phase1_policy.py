@@ -507,7 +507,7 @@ class StateSpacePolicy:
             self.k_p = 0.65
             self.ctr = 0
             self.gain_increase_factor = 1.08
-            self.interval = 2500
+            self.interval = 2000
 
         self.goal_err_sum = np.zeros(9)
         return k_p * err
@@ -525,7 +525,7 @@ class StateSpacePolicy:
         #     self.state = States.ALIGN
         #     return 0.0
         if self.difficulty == 1:
-            k_p = min(0.75, self.k_p)
+            k_p = min(0.76, self.k_p)
         else:
             k_p = min(2.5, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)

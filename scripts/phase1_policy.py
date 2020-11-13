@@ -768,7 +768,7 @@ def main():
     # goal = json.loads(goal_pose_json)
 
     # TODO: Comment before submission
-    difficulty = 3
+    difficulty = 1
     goal_pose = move_cube.sample_goal(difficulty)
     goal = {'position': goal_pose.position,
             'orientation': goal_pose.orientation}

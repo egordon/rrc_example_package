@@ -572,12 +572,12 @@ class StateSpacePolicy:
             self.ctr = 0
             self.gain_increase_factor = 1.0
 
-        if self.goal_reached and self.difficulty == 4:
-            self.state = States.ORIENT
-            print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
-            self.ctr = 0
-            self.goal_reached = False
-            self.goal_begin_time = None
+        #if self.goal_reached and self.difficulty == 4:
+        #    self.state = States.ORIENT
+        #    print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
+        #    self.ctr = 0
+        #    self.goal_reached = False
+        #    self.goal_begin_time = None
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 
@@ -669,7 +669,7 @@ def main():
     # goal = json.loads(goal_pose_json)
 
     # TODO: Comment before submission
-    difficulty = 4
+    difficulty = 1
     goal_pose = move_cube.sample_goal(difficulty)
     goal = {'position': goal_pose.position,
             'orientation': goal_pose.orientation}

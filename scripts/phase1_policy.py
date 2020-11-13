@@ -561,7 +561,6 @@ class StateSpacePolicy:
 
         if err_mag > 0.015:
             self.goal_reached = False
-            self.goal_begin_time = time.time()
 
         if err_mag < 0.01:
             self.success_ctr += 1

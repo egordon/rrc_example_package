@@ -399,7 +399,12 @@ class StateSpacePolicy:
             else:
                 self.do_premanip = False
             if self.difficulty == 4 and not self.do_premanip and self.num_yaw > 0:
-                self.do_yaw = True
+                yaw_err = _get_yaw_err(observation["achieved_goal"]["orientation"], observation["desired_goal"]["orientation"])
+                if yaw_err > 0.5:
+                    self.do_yaw = True
+                else:
+                    self.do_yaw = False
+                    self.num_yaw = 0
             else:
                 self.do_yaw = False
             self.state = States.ALIGN

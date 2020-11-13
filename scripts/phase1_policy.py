@@ -560,7 +560,11 @@ class StateSpacePolicy:
                       for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
         k_p = min(8.0, self.k_p)
-        if any(y < 0.0001 for y in difference) or time.time() - self.into_begin_time > 15.0:
+        if self.difficulty == 3:
+            time_threshold = 5.0 # based on experimental observation
+        else:
+            time_threshold = 15.0
+        if any(y < 0.0001 for y in difference) or time.time() - self.into_begin_time > time_threshold:
             self.state = States.RESET
             print("[INTO]: Switching to RESET at ",
                   time.time() - self.start_time)

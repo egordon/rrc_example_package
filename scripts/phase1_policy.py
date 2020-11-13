@@ -45,10 +45,7 @@ class StateSpacePolicy:
         self.state = States.RESET
         self.difficulty = difficulty
 
-        if self.difficulty == 4:
-            self.EPS = 5e-3
-        else:
-            self.EPS = 2e-2
+        self.EPS = 2e-2
 
         self.DAMP = 1E-6
         self.CUBE_SIZE = 0.0325
@@ -393,7 +390,7 @@ class StateSpacePolicy:
         err = desired - current
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
-            if self.difficulty == 4:
+            if self.difficulty == 5:
                 time.sleep(4.0)
                 print ("[RESET] Verify premanip")
                 self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)

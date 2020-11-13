@@ -174,8 +174,6 @@ class StateSpacePolicy:
                 R.from_rotvec(
                     np.pi/2 * i * np.array([0, 0, 1])).apply(self.manip_axis)
 
-        locs[self.manip_arm][2] += 2.
-
         desired = np.tile(curr_cube_position, 3) + \
             self.CUBE_SIZE * np.hstack(locs)
         
@@ -203,7 +201,7 @@ class StateSpacePolicy:
         current_x = current[0::3]
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
-        # print ("TIP diff: ", difference)
+
         k_p = min(6.0, self.k_p)
         # if all(y < 0.0001 for y in difference):
         #     self.state = States.RESET
@@ -216,8 +214,8 @@ class StateSpacePolicy:
         x, y, z = observation["achieved_goal"]["position"]
         z = self.CUBE_SIZE
         desired = np.tile([x, y, z], 3)
-        desired[3*self.manip_arm+2] += 0.8*self.CUBE_SIZE
-        desired[3*self.manip_arm: 3*self.manip_arm + 2] -= 0.4*self.CUBE_SIZE
+        #desired[3*self.manip_arm+2] += 0.8*self.CUBE_SIZE
+        #desired[3*self.manip_arm: 3*self.manip_arm + 2] -= 0.4*self.CUBE_SIZE
 
         err = desired - current
 
@@ -270,32 +268,29 @@ class StateSpacePolicy:
         desired = np.tile(observation["achieved_goal"]["position"], 3)
         k_p = min(2.5, self.k_p)
 
+        # Keep arms pushing into cube
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
-        # Into force of manip arm
-        into_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0
 
+        # Move cube up above ground
         goal = np.array(self.pregoal_state)
-        goal[2] = 4 * self.CUBE_SIZE
+        goal[2] = 3 * self.CUBE_SIZE
         goal = np.tile(goal, 3)
         goal_err = goal - desired
-        goal_err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.1
 
-        err_mag = np.linalg.norm(goal_err[:3])
-        if err_mag < 0.1:
-            self.goal_err_sum += goal_err
-
+        # Apply torque for manip arm
+        inward = into_err[3*self.manip_arm:3*self.manip_arm + 3] / np.linalg.norm(into_err[3*self.manip_arm:3*self.manip_arm + 3])
+        axis = np.cross(inward, np.array([0, 0, 1])) # Normalized axis of rotation
         rot_err = np.zeros(9)
-        rot_err[3*self.manip_arm:3*self.manip_arm +
-                3] = observation["achieved_goal"]["position"] + np.array([0, 0, 1.5 * self.CUBE_SIZE])
-        rot_err[3*self.manip_arm:3*self.manip_arm +
-                3] -= current[3*self.manip_arm:3*self.manip_arm + 3]
+
+        # Command no rotation if close
+        if np.linalg.norm(axis) > 1E-8:
+            axis = axis / np.linalg.norm(axis)
+            rot_err[3*self.manip_arm:3*self.manip_arm + 3] = np.cross(axis, inward)
 
         # Once manip arm is overhead, drop
         diff = np.linalg.norm(
             current[3*self.manip_arm:3*self.manip_arm+2] - observation["achieved_goal"]["position"][:2])
-        #print("Diff: " + str(diff))
-
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:
             self.state = States.RESET
@@ -309,21 +304,14 @@ class StateSpacePolicy:
             self.pregoal_begin_time = None
             self.do_premanip = False
 
-        #print("End condition: " + str(diff < 0.75 * self.CUBE_SIZE))
-        # TODO: tweak the factor here
-        factor = 0.7  # 0.5 previously
-        # if diff < factor * self.CUBE_SIZE:
-        if self.manip_arm == 0:
-            err_mag = np.linalg.norm(goal_err[3:6])
-        else:
-            err_mag = np.linalg.norm(goal_err[:3])
-
-        print("[PRE GOAL] Goal err magnitude ", np.linalg.norm(goal_err[:3]), " Diff", diff, " K_p ",
+        print("[PRE GOAL] Goal err Diff", diff, " K_p ",
               self.k_p, " time: ", time.time() - self.start_time, " orient: ", observation["achieved_goal"]["orientation"])
 
-        if err_mag < 0.01:
+        # TODO: tweak the factor here
+        factor = 0.7  # 0.5 previously
+        if diff < factor * self.CUBE_SIZE:
             self.success_ctr_pitch_orient += 1
-        if err_mag < 0.01 and self.success_ctr_pitch_orient > 20:
+        if diff < factor * self.CUBE_SIZE and self.success_ctr_pitch_orient > 20:
             # print("PRE ORIENT")
             self.state = States.ORIENT
             print("[PRE GOAL]: Switching to PRE ORIENT")
@@ -333,7 +321,7 @@ class StateSpacePolicy:
             self.interval = 1000
             self.ctr = 0
 
-        return 0.15 * into_err + k_p * goal_err + 0.25 * rot_err #+  0.0005 * self.goal_err_sum
+        return 0.15 * into_err + k_p * goal_err + 0.25 * rot_err
 
     def preorient(self, observation):
         # Return torque for into step
@@ -407,7 +395,7 @@ class StateSpacePolicy:
         err = desired - current
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
-            if self.difficulty == 5:
+            if self.difficulty == 4:
                 time.sleep(4.0)
                 print ("[RESET] Verify premanip")
                 self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)
@@ -589,23 +577,8 @@ class StateSpacePolicy:
         if err_mag > 0.015:
             self.goal_reached = False
 
-        # if err_mag < 0.01 and self.difficulty == 4:
-        #     self.state = States.ORIENT
-        #     print("[GOAL]: Switching to ORIENT")
-        #     print("[GOAL]: K_p ", self.k_p)
-        #     print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
-        #     self.k_p = 0.5
-        #     self.ctr = 0
-
         if err_mag < 0.01:
             self.success_ctr += 1
-
-        # if err_mag < 0.01 and self.success_ctr > 20 and self.difficulty in [2, 3]:
-        #     self.state = States.HOLD
-        #     print("[GOAL]: Goal state achieved")
-        #     print("[GOAL]: Switching to HOLD")
-        #     print("[GOAL]: K_p ", self.k_p)
-        #     self.ctr = 0
 
         if not self.goal_reached and err_mag < 0.01 and self.success_ctr > 20:
             # self.state = States.ORIENT
@@ -615,7 +588,12 @@ class StateSpacePolicy:
             self.ctr = 0
             self.gain_increase_factor = 1.0
 
-        # k_p = 0.65
+        #if self.goal_reached and self.difficulty == 4:
+        #    self.state = States.ORIENT
+        #    print("[GOAL]: Switching to ORIENT")
+        #    self.k_p = 0.5
+        #    self.ctr = 0
+
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 
     def orient(self, observation):

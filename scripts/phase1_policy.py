@@ -708,7 +708,11 @@ def main():
         # if ctr % 50 == 0:
         action = policy.predict(observation)
         # action = np.zeros((9))
-        observation, reward, is_done, info = env.step(action)
+        try:
+            observation, reward, is_done, info = env.step(action)
+        except RuntimeError:
+            print("WARN: RuntimeError in env.step, skipping step")
+            reward = -1
         # print("reward:", reward)
         accumulated_reward += reward
 

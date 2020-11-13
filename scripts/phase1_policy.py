@@ -775,6 +775,7 @@ def main():
     # goal_pose = move_cube.sample_goal(difficulty)
     # goal = {'position': goal_pose.position,
     #         'orientation': goal_pose.orientation}
+
     print(
         "Goal: %s/%s (difficulty: %d)"
         % (goal["position"], goal["orientation"], difficulty)

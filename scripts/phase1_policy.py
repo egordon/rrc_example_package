@@ -510,7 +510,7 @@ class StateSpacePolicy:
         if self.lower_begin_time is None:
             self.lower_begin_time = time.time()
 
-        if time.time() - self.align_begin_time > 15.0:
+        if time.time() - self.lower_begin_time > 15.0:
             self.state = States.RESET
             print("[LOWER]: Switching to RESET at ",
                   time.time() - self.start_time)

@@ -17,6 +17,7 @@ from trifinger_simulation.tasks import move_cube
 
 from utils import pitch_orient, _get_angle_axis_top_only
 
+
 class States(enum.Enum):
     """ Different States for StateSpacePolicy """
 
@@ -36,6 +37,7 @@ class States(enum.Enum):
 
     #: Orient correctly
     ORIENT = enum.auto()
+
 
 class StateSpacePolicy:
     """Dummy policy which uses random actions."""
@@ -64,7 +66,6 @@ class StateSpacePolicy:
         self.interval = 100
         self.gain_increase_factor = 1.2
         self.start_time = None
-        self.goal_begin_time = None
         self.goal_reached = False
         # to avoid completion because of error in cube position
         self.success_ctr = 0
@@ -72,13 +73,21 @@ class StateSpacePolicy:
         self.cube_position = deque(maxlen=100)
         self.cube_orient = deque(maxlen=100)
         self.pregoal_reached = False
-        self.pregoal_begin_time = None
-        self.preinto_begin_time = None
-        self.into_begin_time = None
+
         # orient vars
         self.manip_angle = None
         self.manip_arm = None
         self.manip_axis = None
+
+        # reset time vars
+        self.prealign_begin_time = None
+        self.prelower_begin_time = None
+        self.preinto_begin_time = None
+        self.pregoal_begin_time = None
+        self.align_begin_time = None
+        self.lower_begin_time = None
+        self.into_begin_time = None
+        self.goal_begin_time = None
 
         # Maximum number of premanip steps
         self.num_premanip = 2
@@ -123,12 +132,26 @@ class StateSpacePolicy:
         return observation["observation"]["tip_positions"].flatten()
 
     def prealign(self, observation):
+        if self.prealign_begin_time is None:
+            self.prealign_begin_time = time.time()
+
         # get mean cube pose
         self.cube_position.append(observation["achieved_goal"]["position"])
         self.cube_orient.append(observation["achieved_goal"]["orientation"])
         curr_cube_position = np.mean(np.array(self.cube_position), axis=0)
         curr_cube_position[2] = self.CUBE_SIZE
         curr_cube_orient = np.mean(np.array(self.cube_orient), axis=0)
+
+        if time.time() - self.prealign_begin_time > 15.0:
+            self.state = States.RESET
+            print("[PREALIGN]: Switching to RESET at ",
+                  time.time() - self.start_time)
+            print("[PREALIGN]: K_p ", self.k_p)
+            print("[PREALIGN]: Cube pos ",
+                  observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
+            self.prealign_begin_time = None
 
         # Return torque for align step
         current = self._get_tip_poses(observation)
@@ -149,7 +172,8 @@ class StateSpacePolicy:
         err = desired - current
         if np.linalg.norm(err) < 0.01:
             self.state = States.LOWER
-            print("[PRE ALIGN]: Switching to PRE LOWER at ", time.time() - self.start_time)
+            print("[PRE ALIGN]: Switching to PRE LOWER at ",
+                  time.time() - self.start_time)
             print("[PRE ALIGN]: K_p ", self.k_p)
             print("[PRE ALIGN]: Cube pos ", curr_cube_position)
             self.k_p = 1.2
@@ -158,6 +182,20 @@ class StateSpacePolicy:
         return self.k_p * err
 
     def prelower(self, observation):
+        if self.prelower_begin_time is None:
+            self.prelower_begin_time = time.time()
+
+        if time.time() - self.prelower_begin_time > 15.0:
+            self.state = States.RESET
+            print("[PRELOWER]: Switching to RESET at ",
+                  time.time() - self.start_time)
+            print("[PRELOWER]: K_p ", self.k_p)
+            print("[PRELOWER]: Cube pos ",
+                  observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
+            self.prelower_begin_time = None
+
         self.cube_position.append(observation["achieved_goal"]["position"])
         self.cube_orient.append(observation["achieved_goal"]["orientation"])
         curr_cube_position = np.mean(np.array(self.cube_position), axis=0)
@@ -178,14 +216,15 @@ class StateSpacePolicy:
 
         desired = np.tile(curr_cube_position, 3) + \
             self.CUBE_SIZE * np.hstack(locs)
-        
+
         desired[3*self.manip_arm: 3*self.manip_arm + 2] -= 0.4*self.CUBE_SIZE
 
         err = desired - current
         if np.linalg.norm(err) < 0.02:
             self.previous_state = observation["observation"]["position"]
             self.state = States.INTO
-            print("[PRE LOWER]: Switching to PRE INTO at ", time.time() - self.start_time)
+            print("[PRE LOWER]: Switching to PRE INTO at ",
+                  time.time() - self.start_time)
             print("[PRE LOWER]: K_p ", self.k_p)
             print("[PRE LOWER]: Cube pos ", curr_cube_position)
             print("[PRE LOWER]: Current Tip Forces ",
@@ -227,10 +266,13 @@ class StateSpacePolicy:
         if switch:
             self.pregoal_state = observation["achieved_goal"]["position"]
             self.state = States.GOAL
-            print("[PRE INTO] Tip Forces ", observation["observation"]["tip_force"])
-            print("[PRE INTO]: Switching to PRE GOAL at ", time.time() - self.start_time)
+            print("[PRE INTO] Tip Forces ",
+                  observation["observation"]["tip_force"])
+            print("[PRE INTO]: Switching to PRE GOAL at ",
+                  time.time() - self.start_time)
             print("[PRE INTO]: K_p ", self.k_p)
-            print("[PRE INTO]: Cube pos ", observation['achieved_goal']['position'])
+            print("[PRE INTO]: Cube pos ",
+                  observation['achieved_goal']['position'])
             self.k_p = 0.65
             self.ctr = 0
             self.gain_increase_factor = 1.08
@@ -238,9 +280,11 @@ class StateSpacePolicy:
             self.interval = 1500
         elif time.time() - self.preinto_begin_time > 15.0:
             self.state = States.RESET
-            print("[PRE INTO]: Switching to RESET at ", time.time() - self.start_time)
+            print("[PRE INTO]: Switching to RESET at ",
+                  time.time() - self.start_time)
             print("[PRE INTO]: K_p ", self.k_p)
-            print("[PRE INTO]: Cube pos ", observation['achieved_goal']['position'])
+            print("[PRE INTO]: Cube pos ",
+                  observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.interval = 100
             self.gain_increase_factor = 1.2
@@ -272,14 +316,17 @@ class StateSpacePolicy:
         goal_err = goal - desired
 
         # Apply torque for manip arm
-        inward = into_err[3*self.manip_arm:3*self.manip_arm + 3] / np.linalg.norm(into_err[3*self.manip_arm:3*self.manip_arm + 3])
-        axis = np.cross(inward, np.array([0, 0, 1])) # Normalized axis of rotation
+        inward = into_err[3*self.manip_arm:3*self.manip_arm + 3] / \
+            np.linalg.norm(into_err[3*self.manip_arm:3*self.manip_arm + 3])
+        # Normalized axis of rotation
+        axis = np.cross(inward, np.array([0, 0, 1]))
         rot_err = np.zeros(9)
 
         # Command no rotation if close
         if np.linalg.norm(axis) > 1E-8:
             axis = axis / np.linalg.norm(axis)
-            rot_err[3*self.manip_arm:3*self.manip_arm + 3] = np.cross(axis, inward)
+            rot_err[3*self.manip_arm:3*self.manip_arm +
+                    3] = np.cross(axis, inward)
 
         # Once manip arm is overhead, drop
         diff = np.linalg.norm(
@@ -287,9 +334,11 @@ class StateSpacePolicy:
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:
             self.state = States.RESET
-            print("[PRE GOAL]: Switching to RESET at ", time.time() - self.start_time)
+            print("[PRE GOAL]: Switching to RESET at ",
+                  time.time() - self.start_time)
             print("[PRE GOAL]: K_p ", self.k_p)
-            print("[PRE GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            print("[PRE GOAL]: Cube pos ",
+                  observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.interval = 100
             self.gain_increase_factor = 1.2
@@ -307,9 +356,11 @@ class StateSpacePolicy:
         if diff < factor * self.CUBE_SIZE and self.success_ctr_pitch_orient > 20:
             # print("PRE ORIENT")
             self.state = States.ORIENT
-            print("[PRE GOAL]: Switching to PRE ORIENT at ", time.time() - self.start_time)
+            print("[PRE GOAL]: Switching to PRE ORIENT at ",
+                  time.time() - self.start_time)
             print("[PRE GOAL]: K_p ", self.k_p)
-            print("[PRE GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            print("[PRE GOAL]: Cube pos ",
+                  observation['achieved_goal']['position'])
             self.k_p = 0.3
             self.interval = 1000
             self.ctr = 0
@@ -381,8 +432,9 @@ class StateSpacePolicy:
         if np.linalg.norm(err) < 0.02:
             if self.difficulty == 4 and self.num_premanip > 0:
                 time.sleep(4.0)
-                print ("[RESET] Verify premanip")
-                self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)
+                print("[RESET] Verify premanip")
+                self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(
+                    observation)
                 if self.manip_angle != 0:
                     self.do_premanip = True
                 else:
@@ -391,7 +443,8 @@ class StateSpacePolicy:
                 self.do_premanip = False
                 # self._calculate_premanip(observation)
             self.state = States.ALIGN
-            print("[RESET]: Switching to ALIGN at ", time.time() - self.start_time)
+            print("[RESET]: Switching to ALIGN at ",
+                  time.time() - self.start_time)
             print("[RESET]: K_p ", self.k_p)
             print("[RESET]: Cube pos ", observation['achieved_goal']['position'])
             self.force_offset = observation["observation"]["tip_force"]
@@ -405,6 +458,19 @@ class StateSpacePolicy:
         return self.k_p * err  # + 0.0001* delta_err + 0.16 * self.iterm_reset
 
     def align(self, observation):
+        if self.align_begin_time is None:
+            self.align_begin_time = time.time()
+
+        if time.time() - self.align_begin_time > 15.0:
+            self.state = States.RESET
+            print("[ALIGN]: Switching to RESET at ",
+                  time.time() - self.start_time)
+            print("[ALIGN]: K_p ", self.k_p)
+            print("[ALIGN]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
+            self.align_begin_time = None
+
         # get mean cube pose
         self.cube_position.append(observation["achieved_goal"]["position"])
         self.cube_orient.append(observation["achieved_goal"]["orientation"])
@@ -424,7 +490,8 @@ class StateSpacePolicy:
         # print ("[ALIGN] error: ", err)
         if np.linalg.norm(err) < self.EPS:
             self.state = States.LOWER
-            print("[ALIGN]: Switching to LOWER at ", time.time() - self.start_time)
+            print("[ALIGN]: Switching to LOWER at ",
+                  time.time() - self.start_time)
             print("[ALIGN]: K_p ", self.k_p)
             print("[ALIGN]: Cube pos ", curr_cube_position)
             self.k_p = 0.7
@@ -437,6 +504,19 @@ class StateSpacePolicy:
         return self.k_p * err  # + 0.01 * self.iterm_align
 
     def lower(self, observation):
+        if self.lower_begin_time is None:
+            self.lower_begin_time = time.time()
+
+        if time.time() - self.align_begin_time > 15.0:
+            self.state = States.RESET
+            print("[LOWER]: Switching to RESET at ",
+                  time.time() - self.start_time)
+            print("[LOWER]: K_p ", self.k_p)
+            print("[LOWER]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
+            self.lower_begin_time = None
+
         self.cube_position.append(observation["achieved_goal"]["position"])
         self.cube_orient.append(observation["achieved_goal"]["orientation"])
         curr_cube_position = np.mean(np.array(self.cube_position), axis=0)
@@ -455,7 +535,8 @@ class StateSpacePolicy:
         err = desired - current
         if np.linalg.norm(err) < self.EPS:
             self.state = States.INTO
-            print("[LOWER]: Switching to INTO at ", time.time() - self.start_time)
+            print("[LOWER]: Switching to INTO at ",
+                  time.time() - self.start_time)
             print("[LOWER]: K_p ", self.k_p)
             print("[LOWER]: Cube pos ", curr_cube_position)
             print("[LOWER]: Current Tip Forces ",
@@ -478,7 +559,8 @@ class StateSpacePolicy:
         k_p = min(15.0, self.k_p)
         if any(y < 0.0001 for y in difference) or time.time() - self.into_begin_time > 15.0:
             self.state = States.RESET
-            print("[INTO]: Switching to RESET at ", time.time() - self.start_time)
+            print("[INTO]: Switching to RESET at ",
+                  time.time() - self.start_time)
             print("[INTO]: K_p ", self.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
@@ -502,7 +584,8 @@ class StateSpacePolicy:
         if switch:
             self.state = States.GOAL
             print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
-            print("[INTO]: Switching to GOAL at ", time.time() - self.start_time)
+            print("[INTO]: Switching to GOAL at ",
+                  time.time() - self.start_time)
             print("[INTO]: K_p ", self.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
@@ -546,7 +629,8 @@ class StateSpacePolicy:
             time_threshold = 30.0
         if not self.goal_reached and time.time() - self.goal_begin_time > time_threshold:
             self.state = States.RESET
-            print("[GOAL]: Switching to RESET at ", time.time() - self.start_time)
+            print("[GOAL]: Switching to RESET at ",
+                  time.time() - self.start_time)
             print("[GOAL]: K_p ", self.k_p)
             print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
@@ -572,7 +656,7 @@ class StateSpacePolicy:
             self.ctr = 0
             self.gain_increase_factor = 1.0
 
-        #if self.goal_reached and self.difficulty == 4:
+        # if self.goal_reached and self.difficulty == 4:
         #    self.state = States.ORIENT
         #    print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
         #    self.ctr = 0

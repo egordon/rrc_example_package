@@ -76,6 +76,8 @@ class StateSpacePolicy:
         self.pregoal_begin_time = None
         self.preinto_begin_time = None
         self.into_begin_time = None
+        self.align_begin_time = None
+        self.lower_begin_time = None
         # orient vars
         self.manip_angle = None
         self.manip_arm = None

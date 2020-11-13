@@ -320,11 +320,7 @@ class StateSpacePolicy:
         if switch:
             print("[PRE ORIENT] PRE MANIP DONE")
             self.num_premanip = self.num_premanip - 1
-            self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)
-            if self.manip_angle == 0 or self.num_premanip <= 0:
-                self.do_premanip = False
-
-            self.state = States.ALIGN
+            self.state = States.RESET
             self.k_p = 1.2
             self.interval = 200
             self.ctr = 0
@@ -367,7 +363,7 @@ class StateSpacePolicy:
         err = desired - current
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
-            if self.difficulty == 4:
+            if self.difficulty == 4 and self.num_premanip > 0:
                 time.sleep(4.0)
                 print ("[RESET] Verify premanip")
                 self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)

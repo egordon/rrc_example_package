@@ -46,6 +46,7 @@ class StateSpacePolicy:
         self.difficulty = difficulty
 
         self.EPS = 2e-2
+        self.EPSeff = self.EPS
 
         self.DAMP = 1E-6
         self.CUBE_SIZE = 0.0325
@@ -414,6 +415,8 @@ class StateSpacePolicy:
         return self.k_p * err  # + 0.0001* delta_err + 0.16 * self.iterm_reset
 
     def align(self, observation):
+        if self.align_begin_time is None:
+            self.align_begin_time = time.time()
         # get mean cube pose
         self.cube_position.append(observation["achieved_goal"]["position"])
         self.cube_orient.append(observation["achieved_goal"]["orientation"])
@@ -431,13 +434,25 @@ class StateSpacePolicy:
 
         err = desired - current
         # print ("[ALIGN] error: ", err)
-        if np.linalg.norm(err) < self.EPS:
+        if np.linalg.norm(err) < self.EPSeff:
             self.state = States.LOWER
             print("[ALIGN]: Switching to LOWER at ", time.time() - self.start_time)
             print("[ALIGN]: K_p ", self.k_p)
             print("[ALIGN]: Cube pos ", curr_cube_position)
             self.k_p = 0.7
             self.ctr = 0
+            self.EPSeff = self.EPS
+        elif time.time() - self.align_begin_time > 5.0:
+            self.EPSeff = self.EPS * 2.0
+        elif time.time() - self.align_begin_time > 10.0:
+            self.state = States.RESET
+            print("[INTO]: Switching to RESET at ", time.time() - self.start_time)
+            print("[INTO]: K_p ", self.k_p)
+            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
+            self.align_begin_time = None
+            self.EPSeff = self.EPS
 
         delta_err = err - self.last_align_error
         self.iterm_align += delta_err
@@ -446,6 +461,9 @@ class StateSpacePolicy:
         return self.k_p * err  # + 0.01 * self.iterm_align
 
     def lower(self, observation):
+        if self.lower_begin_time is None:
+            self.lower_begin_time = time.time()
+
         self.cube_position.append(observation["achieved_goal"]["position"])
         self.cube_orient.append(observation["achieved_goal"]["orientation"])
         curr_cube_position = np.mean(np.array(self.cube_position), axis=0)
@@ -462,7 +480,7 @@ class StateSpacePolicy:
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
 
         err = desired - current
-        if np.linalg.norm(err) < self.EPS:
+        if np.linalg.norm(err) < self.EPSeff:
             self.state = States.INTO
             print("[LOWER]: Switching to INTO at ", time.time() - self.start_time)
             print("[LOWER]: K_p ", self.k_p)
@@ -471,6 +489,18 @@ class StateSpacePolicy:
                   observation["observation"]["tip_force"])
             self.k_p = 0.7
             self.ctr = 0
+            self.EPSeff = self.EPS
+        elif time.time() - self.lower_begin_time > 5.0:
+            self.EPSeff = self.EPS * 2.0
+        elif time.time() - self.lower_begin_time > 10.0:
+            self.state = States.RESET
+            print("[INTO]: Switching to RESET at ", time.time() - self.start_time)
+            print("[INTO]: K_p ", self.k_p)
+            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.ctr = 0
+            self.lower_begin_time = None
+            self.EPSeff = self.EPS
 
         return self.k_p * err
 

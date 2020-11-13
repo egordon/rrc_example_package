@@ -556,15 +556,23 @@ class StateSpacePolicy:
         # Return torque for into step
         current = self._get_tip_poses(observation)
         current_x = current[0::3]
-        difference = [abs(p1 - p2)
-                      for p1 in current_x for p2 in current_x if p1 != p2]
+        current_y = current[1::3]
+        difference_x = [abs(p1 - p2)
+                        for p1 in current_x for p2 in current_x if p1 != p2]
+        difference_y = [abs(p1 - p2)
+                        for p1 in current_y for p2 in current_y if p1 != p2]
         # print ("TIP diff: ", difference)
         k_p = min(8.0, self.k_p)
         if self.difficulty == 3:
-            time_threshold = 5.0 # based on experimental observation
+            time_threshold = 5.0  # based on experimental observation
         else:
             time_threshold = 15.0
-        if any(y < 0.0001 for y in difference) or time.time() - self.into_begin_time > time_threshold:
+
+        close_x = any(d < 0.0001 for d in difference_x)
+        close_y = any(d < 0.0001 for d in difference_y)
+        close = close_x and close_y
+
+        if close or time.time() - self.into_begin_time > time_threshold:
             self.state = States.RESET
             print("[INTO]: Switching to RESET at ",
                   time.time() - self.start_time)

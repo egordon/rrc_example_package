@@ -81,7 +81,7 @@ class StateSpacePolicy:
         self.manip_axis = None
 
         # Maximum number of premanip steps
-        self.num_premanip = 2
+        self.num_premanip = 0
 
     def _get_gravcomp(self, observation):
         # Returns: 9 torques required for grav comp

@@ -81,6 +81,9 @@ class StateSpacePolicy:
         self.manip_arm = None
         self.manip_axis = None
 
+        # Maximum number of premanip steps
+        self.num_premanip = 2
+
     def _get_gravcomp(self, observation):
         # Returns: 9 torques required for grav comp
         ret2 = pybullet.calculateInverseDynamics(self.finger.finger_id,
@@ -329,6 +332,7 @@ class StateSpacePolicy:
         k_p = min(self.k_p, 3.0)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
+        # Flip, move outwards
         err = current - desired
 
         # Read Tip Force
@@ -338,11 +342,15 @@ class StateSpacePolicy:
         for f in tip_forces:
             if f < 0.1:
                 switch = True
-        angle, _, __ = pitch_orient(observation)
-        if switch and angle == 0:
-            self.manip_angle -= 90
-            print("[PRE ORIENT] MANIP DONE")
-            self.state = States.GOAL
+
+        if switch:
+            print("[PRE ORIENT] PRE MANIP DONE")
+            self.num_premanip = self.num_premanip - 1
+            self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)
+            if self.manip_angle == 0 or self.num_premanip <= 0:
+                self.do_premanip = False
+
+            self.state = States.ALIGN
             self.k_p = 1.2
             self.interval = 200
             self.ctr = 0
@@ -371,16 +379,6 @@ class StateSpacePolicy:
         elif self.state == States.ORIENT:
             # print("do preorient")
             force = self.preorient(observation)
-
-        if self.manip_angle == 0:
-            # verify
-            print ("Verify premanip")
-            self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)
-            if self.manip_angle == 0:
-                self.do_premanip = False
-                self.state = States.ALIGN
-            else:
-                self.state = States.RESET
 
         return force
 

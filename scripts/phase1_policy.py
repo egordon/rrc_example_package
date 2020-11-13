@@ -203,45 +203,20 @@ class StateSpacePolicy:
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
         k_p = min(6.0, self.k_p)
-        # if all(y < 0.0001 for y in difference):
-        #     self.state = States.RESET
-        #     print("[INTO]: Switching to RESET")
-        #     print("[INTO]: K_p ", self.k_p)
-        #     print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-        #     self.k_p = 0.5
-        #     self.ctr = 0
 
-        x, y, z = observation["achieved_goal"]["position"]
+        x, y = observation["achieved_goal"]["position"][:2]
         z = self.CUBE_SIZE
-        desired = np.tile([x, y, z], 3)
-        #desired[3*self.manip_arm+2] += 0.8*self.CUBE_SIZE
-        #desired[3*self.manip_arm: 3*self.manip_arm + 2] -= 0.4*self.CUBE_SIZE
+        desired = np.tile(np.array([x, y, z]), 3)
 
         err = desired - current
-
-        # Lower force of manip arm
-        err[3*self.manip_arm:3*self.manip_arm + 3] *= 0.4
 
         # Read Tip Force
         tip_forces = observation["observation"]["tip_force"] - \
             self.force_offset
         switch = True
-        for i, f in enumerate(tip_forces):
-            if i == self.manip_arm:
-                continue
-            if f < 0.07:
+        for f in tip_forces:
+            if f < 0.08:
                 switch = False
-
-        # Override with small diff
-        diff = observation["observation"]["position"] - self.previous_state
-        self.previous_state = observation["observation"]["position"]
-
-        if np.amax(diff) < 5e-5:
-            switch = True
-
-        # if switch:
-        #     self.gain_increase_factor = 1.00
-
         if switch:
             self.pregoal_state = observation["achieved_goal"]["position"]
             self.state = States.GOAL
@@ -390,7 +365,7 @@ class StateSpacePolicy:
         err = desired - current
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
-            if self.difficulty == 5:
+            if self.difficulty == 4:
                 time.sleep(4.0)
                 print ("[RESET] Verify premanip")
                 self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)

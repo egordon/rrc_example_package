@@ -73,6 +73,8 @@ class StateSpacePolicy:
         self.cube_orient = deque(maxlen=100)
         self.pregoal_reached = False
         self.pregoal_begin_time = None
+        self.preinto_begin_time = None
+        self.into_begin_time = None
         # orient vars
         self.manip_angle = None
         self.manip_arm = None
@@ -571,12 +573,11 @@ class StateSpacePolicy:
             self.ctr = 0
             self.gain_increase_factor = 1.0
 
-        #if self.goal_reached and self.difficulty == 4:
-        #    self.state = States.ORIENT
-        #    print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
-        #    self.k_p = 0.5
-        #    self.ctr = 0
-        #    self.goal_reached = False
+        if self.goal_reached and self.difficulty == 4:
+            self.state = States.ORIENT
+            print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
+            self.ctr = 0
+            self.goal_reached = False
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 

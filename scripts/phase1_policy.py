@@ -393,7 +393,7 @@ class StateSpacePolicy:
         err = desired - current
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
-            if self.difficulty == 4:
+            if self.difficulty == 5:
                 time.sleep(4.0)
                 print ("[RESET] Verify premanip")
                 self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(observation)

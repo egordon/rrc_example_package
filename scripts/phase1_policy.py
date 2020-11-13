@@ -67,6 +67,7 @@ class StateSpacePolicy:
         self.gain_increase_factor = 1.2
         self.start_time = None
         self.goal_reached = False
+        self.premanip_start = False
         # to avoid completion because of error in cube position
         self.success_ctr = 0
         self.success_ctr_pitch_orient = 0
@@ -132,6 +133,7 @@ class StateSpacePolicy:
         return observation["observation"]["tip_positions"].flatten()
 
     def prealign(self, observation):
+        self.premanip_start = True
         if self.prealign_begin_time is None:
             self.prealign_begin_time = time.time()
 
@@ -431,7 +433,8 @@ class StateSpacePolicy:
         delta_err = err - self.last_reset_error
         if np.linalg.norm(err) < 0.02:
             if self.difficulty == 4 and self.num_premanip > 0:
-                time.sleep(4.0)
+                if self.premanip_start:
+                    time.sleep(4.0)
                 print("[RESET] Verify premanip")
                 self.manip_angle, self.manip_axis, self.manip_arm = pitch_orient(
                     observation)

@@ -147,7 +147,7 @@ class StateSpacePolicy:
         err = desired - current
         if np.linalg.norm(err) < 0.01:
             self.state = States.LOWER
-            print("[PRE ALIGN]: Switching to PRE LOWER")
+            print("[PRE ALIGN]: Switching to PRE LOWER at ", time.time() - self.start_time)
             print("[PRE ALIGN]: K_p ", self.k_p)
             print("[PRE ALIGN]: Cube pos ", curr_cube_position)
             self.k_p = 1.2
@@ -183,7 +183,7 @@ class StateSpacePolicy:
         if np.linalg.norm(err) < 0.02:
             self.previous_state = observation["observation"]["position"]
             self.state = States.INTO
-            print("[PRE LOWER]: Switching to PRE INTO")
+            print("[PRE LOWER]: Switching to PRE INTO at ", time.time() - self.start_time)
             print("[PRE LOWER]: K_p ", self.k_p)
             print("[PRE LOWER]: Cube pos ", curr_cube_position)
             print("[PRE LOWER]: Current Tip Forces ",
@@ -214,14 +214,16 @@ class StateSpacePolicy:
         tip_forces = observation["observation"]["tip_force"] - \
             self.force_offset
         switch = True
-        for f in tip_forces:
-            if f < 0.08:
+        for i, f in enumerate(tip_forces):
+            if i == self.manip_arm:
+                continue
+            if f < 0.07:
                 switch = False
         if switch:
             self.pregoal_state = observation["achieved_goal"]["position"]
             self.state = States.GOAL
             print("[PRE INTO] Tip Forces ", observation["observation"]["tip_force"])
-            print("[PRE INTO]: Switching to PRE GOAL")
+            print("[PRE INTO]: Switching to PRE GOAL at ", time.time() - self.start_time)
             print("[PRE INTO]: K_p ", self.k_p)
             print("[PRE INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
@@ -269,7 +271,7 @@ class StateSpacePolicy:
 
         if not self.pregoal_reached and time.time() - self.pregoal_begin_time > 20.0:
             self.state = States.RESET
-            print("[PRE GOAL]: Switching to RESET")
+            print("[PRE GOAL]: Switching to RESET at ", time.time() - self.start_time)
             print("[PRE GOAL]: K_p ", self.k_p)
             print("[PRE GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
@@ -289,7 +291,7 @@ class StateSpacePolicy:
         if diff < factor * self.CUBE_SIZE and self.success_ctr_pitch_orient > 20:
             # print("PRE ORIENT")
             self.state = States.ORIENT
-            print("[PRE GOAL]: Switching to PRE ORIENT")
+            print("[PRE GOAL]: Switching to PRE ORIENT at ", time.time() - self.start_time)
             print("[PRE GOAL]: K_p ", self.k_p)
             print("[PRE GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.3
@@ -377,7 +379,7 @@ class StateSpacePolicy:
                 self.do_premanip = False
                 # self._calculate_premanip(observation)
             self.state = States.ALIGN
-            print("[RESET]: Switching to ALIGN")
+            print("[RESET]: Switching to ALIGN at ", time.time() - self.start_time)
             print("[RESET]: K_p ", self.k_p)
             print("[RESET]: Cube pos ", observation['achieved_goal']['position'])
             self.force_offset = observation["observation"]["tip_force"]
@@ -410,7 +412,7 @@ class StateSpacePolicy:
         # print ("[ALIGN] error: ", err)
         if np.linalg.norm(err) < self.EPS:
             self.state = States.LOWER
-            print("[ALIGN]: Switching to LOWER")
+            print("[ALIGN]: Switching to LOWER at ", time.time() - self.start_time)
             print("[ALIGN]: K_p ", self.k_p)
             print("[ALIGN]: Cube pos ", curr_cube_position)
             self.k_p = 0.7
@@ -441,7 +443,7 @@ class StateSpacePolicy:
         err = desired - current
         if np.linalg.norm(err) < self.EPS:
             self.state = States.INTO
-            print("[LOWER]: Switching to INTO")
+            print("[LOWER]: Switching to INTO at ", time.time() - self.start_time)
             print("[LOWER]: K_p ", self.k_p)
             print("[LOWER]: Cube pos ", curr_cube_position)
             print("[LOWER]: Current Tip Forces ",
@@ -461,7 +463,7 @@ class StateSpacePolicy:
         k_p = min(15.0, self.k_p)
         if any(y < 0.0001 for y in difference):
             self.state = States.RESET
-            print("[INTO]: Switching to RESET")
+            print("[INTO]: Switching to RESET at ", time.time() - self.start_time)
             print("[INTO]: K_p ", self.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
@@ -484,7 +486,7 @@ class StateSpacePolicy:
         if switch:
             self.state = States.GOAL
             print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
-            print("[INTO]: Switching to GOAL")
+            print("[INTO]: Switching to GOAL at ", time.time() - self.start_time)
             print("[INTO]: K_p ", self.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.65
@@ -531,7 +533,7 @@ class StateSpacePolicy:
             time_threshold = 30.0
         if not self.goal_reached and time.time() - self.goal_begin_time > time_threshold:
             self.state = States.RESET
-            print("[GOAL]: Switching to RESET")
+            print("[GOAL]: Switching to RESET at ", time.time() - self.start_time)
             print("[GOAL]: K_p ", self.k_p)
             print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
@@ -560,7 +562,7 @@ class StateSpacePolicy:
 
         #if self.goal_reached and self.difficulty == 4:
         #    self.state = States.ORIENT
-        #    print("[GOAL]: Switching to ORIENT")
+        #    print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
         #    self.k_p = 0.5
         #    self.ctr = 0
 

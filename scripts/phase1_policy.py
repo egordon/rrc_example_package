@@ -623,18 +623,15 @@ class StateSpacePolicy:
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
-        if self.difficulty == 1:
-            k_p = min(0.76, self.k_p)
-        else:
-            k_p = min(0.79, self.k_p)
+        k_p = min(0.79, self.k_p)
         desired = np.tile(observation["achieved_goal"]["position"], 3)
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
 
         goal = np.tile(observation["desired_goal"]["position"], 3)
-        if self.difficulty == 1:
-            goal[2] += 0.002  # Reduces friction with floor
+        if self.difficulty == 1 and not self.goal_reached:
+            goal[2] += 0.007  # Reduces friction with floor
         goal_err = goal - desired
         err_mag = np.linalg.norm(goal_err[:3])
 

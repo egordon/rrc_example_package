@@ -559,7 +559,7 @@ class StateSpacePolicy:
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
-        k_p = min(15.0, self.k_p)
+        k_p = min(8.0, self.k_p)
         if any(y < 0.0001 for y in difference) or time.time() - self.into_begin_time > 15.0:
             self.state = States.RESET
             print("[INTO]: Switching to RESET at ",

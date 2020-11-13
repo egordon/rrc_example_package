@@ -15,7 +15,7 @@ from scipy.spatial.transform import Rotation as R
 from trifinger_simulation import trifingerpro_limits
 from trifinger_simulation.tasks import move_cube
 
-from utils import pitch_orient, _get_angle_axis_top_only
+from utils import pitch_orient, _get_angle_axis_top_only, _get_yaw_err
 
 class States(enum.Enum):
     """ Different States for StateSpacePolicy """
@@ -82,6 +82,11 @@ class StateSpacePolicy:
 
         # Maximum number of premanip steps
         self.num_premanip = 2
+
+        # Maximum number of yaw steps
+        self.num_yaw = 1
+        self.do_yaw = False
+        self.yawgoal_begin_time = None
 
     def _get_gravcomp(self, observation):
         # Returns: 9 torques required for grav comp
@@ -335,7 +340,8 @@ class StateSpacePolicy:
 
         if switch:
             print("[PRE ORIENT] PRE MANIP DONE")
-            self.num_premanip = self.num_premanip - 1
+            if self.num_premanip > 0:
+                self.num_premanip = self.num_premanip - 1
             self.state = States.RESET
             self.k_p = 1.2
             self.interval = 200
@@ -389,7 +395,10 @@ class StateSpacePolicy:
                     self.do_premanip = False
             else:
                 self.do_premanip = False
-                # self._calculate_premanip(observation)
+            if self.difficulty == 4 and not self.do_premanip and self.num_yaw > 0:
+                self.do_yaw = True
+            else:
+                self.do_yaw = False
             self.state = States.ALIGN
             print("[RESET]: Switching to ALIGN at ", time.time() - self.start_time)
             print("[RESET]: K_p ", self.k_p)
@@ -609,6 +618,67 @@ class StateSpacePolicy:
 
         return 0.25 * into_err + self.k_p * goal_err + 0.1 * ang_err
 
+    def yawgoal(self, observation):
+        if self.yawgoal_begin_time is None:
+            self.yawgoal_begin_time = time.time()
+        # Return torque for lower step
+        current = self._get_tip_poses(observation)
+
+        desired = np.tile(observation["achieved_goal"]["position"], 3)
+
+        into_err = desired - current
+        into_err /= np.linalg.norm(into_err)
+
+        angle = _get_yaw_err(
+            observation["achieved_goal"]["orientation"], observation["desired_goal"]["orientation"])
+        axis = np.array([0, 0, 1])
+
+        ang_err = np.zeros(9)
+        ang_err[:3] = -angle * \
+            np.cross(into_err[:3] / np.linalg.norm(into_err[:3]), axis)
+        ang_err[3:6] = -angle * \
+            np.cross(into_err[3:6] / np.linalg.norm(into_err[3:6]), axis)
+        ang_err[6:] = -angle * \
+            np.cross(into_err[6:] / np.linalg.norm(into_err[6:]), axis)
+
+        if angle < 0.1 or time.time() - self.yawgoal_begin_time > 5.0:
+            self.state = States.ORIENT
+            print("[YAW GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
+            print("[PRE GOAL]: K_p ", self.k_p)
+            print("[PRE GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.3
+            self.interval = 1000
+            self.ctr = 0
+            self.yawgoal_begin_time = None
+            self.num_yaw = self.num_yaw - 1
+
+        return 0.25 * into_err + 0.1 * ang_err
+
+    def yawmanip(self, observation):
+        force = np.zeros(9)
+
+        if self.state == States.ALIGN:
+            # print("do prealign")
+            force = self.align(observation)
+
+        elif self.state == States.LOWER:
+            # print("do prelower")
+            force = self.lower(observation)
+
+        elif self.state == States.INTO:
+            # print("do preinto")
+            force = self.into(observation)
+
+        elif self.state == States.GOAL:
+            # print("do pregoal")
+            force = self.yawgoal(observation)
+
+        elif self.state == States.ORIENT:
+            # print("do preorient")
+            force = self.preorient(observation)
+
+        return force
+
     def predict(self, observation):
         # Get Jacobians
         J = self._get_jacobians(observation)
@@ -622,6 +692,9 @@ class StateSpacePolicy:
         elif self.do_premanip:
             # print ("do premanip")
             force = self.premanip(observation)
+        elif self.do_yaw:
+            # print ("do premanip")
+            force = self.yawmanip(observation)
         elif self.state == States.ALIGN:
             # print ("do align")
             force = self.align(observation)

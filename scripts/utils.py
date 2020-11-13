@@ -31,6 +31,12 @@ def _get_angle_axis(current, target):
     else:
         return 0, np.zeros(len(rotvec))
 
+def _get_yaw_err(current, target):
+    angle, axis = _get_angle_axis(current, target)
+
+    # Project onto +z, scale angle
+    return angle * axis[2]
+
 def _get_angle_axis_top_only(current, target):
     # Return:
     # (1) angle err between orientations

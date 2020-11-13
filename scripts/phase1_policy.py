@@ -137,6 +137,7 @@ class StateSpacePolicy:
         if self.prealign_begin_time is None:
             self.prealign_begin_time = time.time()
 
+        self.k_p = min(5.0, self.k_p)
         # get mean cube pose
         self.cube_position.append(observation["achieved_goal"]["position"])
         self.cube_orient.append(observation["achieved_goal"]["orientation"])
@@ -144,7 +145,7 @@ class StateSpacePolicy:
         curr_cube_position[2] = self.CUBE_SIZE
         curr_cube_orient = np.mean(np.array(self.cube_orient), axis=0)
 
-        if time.time() - self.prealign_begin_time > 15.0:
+        if time.time() - self.prealign_begin_time > 10.0:
             self.state = States.RESET
             print("[PREALIGN]: Switching to RESET at ",
                   time.time() - self.start_time)
@@ -187,7 +188,9 @@ class StateSpacePolicy:
         if self.prelower_begin_time is None:
             self.prelower_begin_time = time.time()
 
-        if time.time() - self.prelower_begin_time > 15.0:
+        self.k_p = min(5.0, self.k_p)
+
+        if time.time() - self.prelower_begin_time > 10.0:
             self.state = States.RESET
             print("[PRELOWER]: Switching to RESET at ",
                   time.time() - self.start_time)
@@ -280,7 +283,7 @@ class StateSpacePolicy:
             self.gain_increase_factor = 1.08
             self.preinto_begin_time = None
             self.interval = 1500
-        elif time.time() - self.preinto_begin_time > 15.0:
+        elif time.time() - self.preinto_begin_time > 10.0:
             self.state = States.RESET
             print("[PRE INTO]: Switching to RESET at ",
                   time.time() - self.start_time)

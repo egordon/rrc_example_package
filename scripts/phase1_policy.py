@@ -236,8 +236,7 @@ class StateSpacePolicy:
             self.gain_increase_factor = 1.08
             self.preinto_begin_time = None
             self.interval = 1500
-
-        if time.time() - self.preinto_begin_time > 15.0:
+        elif time.time() - self.preinto_begin_time > 15.0:
             self.state = States.RESET
             print("[PRE INTO]: Switching to RESET at ", time.time() - self.start_time)
             print("[PRE INTO]: K_p ", self.k_p)
@@ -477,7 +476,7 @@ class StateSpacePolicy:
                       for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
         k_p = min(15.0, self.k_p)
-        if any(y < 0.0001 for y in difference) or time.time() - self.preinto_begin_time > 15.0:
+        if any(y < 0.0001 for y in difference) or time.time() - self.into_begin_time > 15.0:
             self.state = States.RESET
             print("[INTO]: Switching to RESET at ", time.time() - self.start_time)
             print("[INTO]: K_p ", self.k_p)
@@ -578,6 +577,7 @@ class StateSpacePolicy:
             print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
             self.ctr = 0
             self.goal_reached = False
+            self.goal_begin_time = None
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 

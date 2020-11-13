@@ -674,8 +674,8 @@ class StateSpacePolicy:
         if angle < 0.1 or time.time() - self.yawgoal_begin_time > 5.0:
             self.state = States.ORIENT
             print("[YAW GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
-            print("[PRE GOAL]: K_p ", self.k_p)
-            print("[PRE GOAL]: Cube pos ", observation['achieved_goal']['position'])
+            print("[YAW GOAL]: K_p ", self.k_p)
+            print("[YAW GOAL]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.3
             self.interval = 1000
             self.ctr = 0

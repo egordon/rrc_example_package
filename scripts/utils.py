@@ -132,18 +132,15 @@ def pitch_orient(observation):
     
     # Determine which arm gets the 90deg rotation
     if manip_angle > 0:
-        arm_angle = np.arctan2(
-            manip_axis[1], manip_axis[0])
+        arm_angle = np.rad2deg(np.arctan2(
+            manip_axis[1], manip_axis[0]))
         
         print ("arm angle: ", arm_angle, " ax: ", manip_axis)
-        arm_angle += np.pi/2
-        if arm_angle > np.pi:
-            arm_angle -= 2*np.pi
 
-        if arm_angle < (np.pi/2 + np.pi/3) and arm_angle > (np.pi/2 - np.pi/3):  # 30 to 150
-            manip_arm = 0
-        elif arm_angle > (-np.pi/2) and arm_angle < (np.pi/2 - np.pi/3):  # -90 to 30
+        if arm_angle > -90.0 and arm_angle <= 30.0:
             manip_arm = 1
+        elif arm_angle > 30.0 and arm_angle <= 150:
+            manip_arm = 0
         else:
             manip_arm = 2
 

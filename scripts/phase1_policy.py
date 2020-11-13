@@ -138,7 +138,7 @@ class StateSpacePolicy:
             index = (self.manip_arm + 1 - i) % 3
             locs[index] = 1.5 * \
                 R.from_rotvec(
-                    np.pi/2 * i * np.array([0, 0, 1])).apply(self.manip_axis)
+                    np.pi/2 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 2
 
         desired = np.tile(curr_cube_position, 3) + \
@@ -172,7 +172,7 @@ class StateSpacePolicy:
             index = (self.manip_arm + 1 - i) % 3
             locs[index] = 1.5 * \
                 R.from_rotvec(
-                    np.pi/2 * i * np.array([0, 0, 1])).apply(self.manip_axis)
+                    np.pi/2 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
 
         desired = np.tile(curr_cube_position, 3) + \
             self.CUBE_SIZE * np.hstack(locs)

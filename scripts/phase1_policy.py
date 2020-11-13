@@ -196,6 +196,9 @@ class StateSpacePolicy:
         return self.k_p * err
 
     def preinto(self, observation):
+        if self.preinto_begin_time is None:
+            self.preinto_begin_time = time.time()
+
         # Return torque for into step
         current = self._get_tip_poses(observation)
         current_x = current[0::3]
@@ -229,8 +232,20 @@ class StateSpacePolicy:
             self.k_p = 0.65
             self.ctr = 0
             self.gain_increase_factor = 1.08
-            # self.do_premanip = False
+            self.preinto_begin_time = None
             self.interval = 1500
+
+        if time.time() - self.preinto_begin_time > 15.0:
+            self.state = States.RESET
+            print("[PRE INTO]: Switching to RESET at ", time.time() - self.start_time)
+            print("[PRE INTO]: K_p ", self.k_p)
+            print("[PRE INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.k_p = 0.5
+            self.interval = 100
+            self.gain_increase_factor = 1.2
+            self.ctr = 0
+            self.preinto_begin_time = None
+            self.do_premanip = False
 
         self.goal_err_sum = np.zeros(9)
         return self.k_p * err
@@ -450,6 +465,9 @@ class StateSpacePolicy:
         return self.k_p * err
 
     def into(self, observation):
+        if self.into_begin_time is None:
+            self.into_begin_time = time.time()
+
         # Return torque for into step
         current = self._get_tip_poses(observation)
         current_x = current[0::3]
@@ -457,13 +475,14 @@ class StateSpacePolicy:
                       for p1 in current_x for p2 in current_x if p1 != p2]
         # print ("TIP diff: ", difference)
         k_p = min(15.0, self.k_p)
-        if any(y < 0.0001 for y in difference):
+        if any(y < 0.0001 for y in difference) or time.time() - self.preinto_begin_time > 15.0:
             self.state = States.RESET
             print("[INTO]: Switching to RESET at ", time.time() - self.start_time)
             print("[INTO]: K_p ", self.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.ctr = 0
+            self.into_begin_time = None
 
         # print ("Current tip pose: ", current)
         x, y = observation["achieved_goal"]["position"][:2]
@@ -501,10 +520,7 @@ class StateSpacePolicy:
         current_x = current[0::3]
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
-        # print ("TIP diff: ", difference)
-        # if any(y < 0.02 for y in difference):
-        #     self.state = States.ALIGN
-        #     return 0.0
+
         if self.difficulty == 1:
             k_p = min(0.76, self.k_p)
         else:
@@ -549,7 +565,6 @@ class StateSpacePolicy:
             self.success_ctr += 1
 
         if not self.goal_reached and err_mag < 0.01 and self.success_ctr > 20:
-            # self.state = States.ORIENT
             print("[GOAL]: Goal state achieved")
             print("[GOAL]: K_p ", self.k_p)
             self.goal_reached = True
@@ -561,6 +576,7 @@ class StateSpacePolicy:
         #    print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
         #    self.k_p = 0.5
         #    self.ctr = 0
+        #    self.goal_reached = False
 
         return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
 
@@ -590,7 +606,7 @@ class StateSpacePolicy:
         ang_err[6:] = -angle * \
             np.cross(into_err[6:] / np.linalg.norm(into_err[6:]), axis)
 
-        return 0.04 * into_err + 0.11 * goal_err + 0.0004 * self.goal_err_sum + 0.006 * ang_err
+        return 0.25 * into_err + self.k_p * goal_err + 0.1 * ang_err
 
     def predict(self, observation):
         # Get Jacobians

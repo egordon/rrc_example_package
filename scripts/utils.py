@@ -102,10 +102,10 @@ def pitch_orient(observation):
     # See where that face is on the current cube
     manip_axis = R.from_quat(current).apply(axes[min_axis_id])
     print("Manip Axis: ", manip_axis)
-    if np.abs(1 - manip_axis[2]) < 0.03:
+    if np.abs(1 - manip_axis[2]) < 0.3:
         # On top, no manipulation
         manip_angle = 0
-    elif np.abs(-1 - manip_axis[2]) < 0.03:
+    elif np.abs(-1 - manip_axis[2]) < 0.3:
         # On bottom, need 2 90deg rotations
         manip_angle = 180
     else:

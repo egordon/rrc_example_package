@@ -265,7 +265,7 @@ class StateSpacePolicy:
         current = self._get_tip_poses(observation)
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
-        k_p = min(2.5, self.k_p)
+        k_p = min(2.0, self.k_p)
 
         # Keep arms pushing into cube
         into_err = desired - current
@@ -320,7 +320,7 @@ class StateSpacePolicy:
             self.interval = 1000
             self.ctr = 0
 
-        return 0.15 * into_err + k_p * goal_err + 0.25 * rot_err
+        return 0.14 * into_err + k_p * goal_err + 0.25 * rot_err
 
     def preorient(self, observation):
         # Return torque for into step

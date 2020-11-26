@@ -101,16 +101,10 @@ def main():
     # the difficulty level and the goal pose (as JSON string) are passed as
     # arguments
 
-    # TODO: Uncomment before submission
-    # difficulty = int(sys.argv[1])
-    # goal_pose_json = sys.argv[2]
-    # goal = json.loads(goal_pose_json)
-
-    # TODO: Comment before submission
-    difficulty = 1
-    goal_pose = move_cube.sample_goal(difficulty)
-    goal = {'position': goal_pose.position,
-            'orientation': goal_pose.orientation}
+    # UPDATE: Change goal.json to update difficulty / fixed goal
+    difficulty = int(sys.argv[1])
+    goal_pose_json = sys.argv[2]
+    goal = json.loads(goal_pose_json)
 
     print(
         "Goal: %s/%s (difficulty: %d)"

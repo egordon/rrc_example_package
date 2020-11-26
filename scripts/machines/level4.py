@@ -7,6 +7,8 @@ from statemachine import StateMachine, State
 class RRCMachine(StateMachine):
     reset = State('RESET', initial=True)
 
+    restart = reset.to(reset)
+
     def on_enter_reset(self):
         print('Entering RESET!')
 

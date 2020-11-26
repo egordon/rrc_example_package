@@ -41,7 +41,7 @@ class MachinePolicy:
             self.root.ctr = 0
 
         # Simple P-controller
-        return self.k_p * err
+        return self.root.k_p * err
 
     def predict(self, observation):
         force = np.zeros(9)

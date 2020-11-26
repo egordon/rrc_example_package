@@ -28,7 +28,7 @@ class MachinePolicy:
         # Get Desired Reset Position
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         desired = np.array(
-            root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+            self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
 
         # Calculate Error
         err = desired - current
@@ -36,9 +36,9 @@ class MachinePolicy:
         # Reached Goal
         if np.linalg.norm(err) < 0.02: # TODO: Remove Magic Number
             # Prevent Further k_p increases
-            if root.ctr > 1:
+            if self.root.ctr > 1:
                 print("Reached RESET Position")
-            root.ctr = 0
+            self.root.ctr = 0
 
         # Simple P-controller
         return self.k_p * err

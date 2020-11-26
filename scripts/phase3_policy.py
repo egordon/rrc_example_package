@@ -10,13 +10,13 @@ import robot_interfaces
 from rrc_example_package import cube_env
 from trifinger_simulation.tasks import move_cuboid
 
-from machines.level1 import StateMachine as Level1Machine
-from machines.level3 import StateMachine as Level3Machine
-from machines.level4 import StateMachine as Level4Machine
+from machines.level1 import MachinePolicy as Level1Machine
+from machines.level3 import MachinePolicy as Level3Machine
+from machines.level4 import MachinePolicy as Level4Machine
 
 
 class StateSpacePolicy:
-    """Dummy policy which uses random actions."""
+    """Policy references one of many sub-state machines."""
 
     def __init__(self, env, difficulty, observation):
         self.machine = None
@@ -33,13 +33,13 @@ class StateSpacePolicy:
         # Set Submachine
         if difficulty == 1:
             # Level 1 Difficulty
-            self.machine = Level1Machine(self, env, observation)
+            self.machine = Level1Machine(self)
         elif difficulty == 2 or difficulty == 3:
             # Level 2/3 Difficulty
-            self.machine = Level3Machine(self, env, observation)
+            self.machine = Level3Machine(self)
         elif difficulty == 4:
             # Level 4 Difficulty
-            self.machine = Level4Machine(self, env, observation)
+            self.machine = Level4Machine(self)
 
     def _get_gravcomp(self, observation):
         # Returns: 9 torques required for grav comp

@@ -47,6 +47,6 @@ class MachinePolicy:
         force = np.zeros(9)
 
         if self.machine.is_reset:
-            force = self.reset()
+            force = self.reset(observation)
 
         return force

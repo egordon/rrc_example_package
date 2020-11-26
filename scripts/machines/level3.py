@@ -5,22 +5,22 @@ import numpy as np
 from statemachine import StateMachine, State
 
 class RRCMachine(StateMachine):
-	reset = State('RESET', initial=True)
+    reset = State('RESET', initial=True)
 
-	def on_enter_reset(self):
+    def on_enter_reset(self):
         print('Entering RESET!')
 
 class MachinePolicy:
 
-	def __init__(self, root):
-		# Root Policy: Used to reference global state
-		self.root = root
+    def __init__(self, root):
+        # Root Policy: Used to reference global state
+        self.root = root
 
-		# State Machine
-		self.machine = RRCMachine()
+        # State Machine
+        self.machine = RRCMachine()
 
-	def reset(self, observation):
-		# Get Current Position
+    def reset(self, observation):
+        # Get Current Position
         current = observation["observation"]["tip_positions"].flatten()
 
         # Get Desired Reset Position
@@ -35,16 +35,16 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.02: # TODO: Remove Magic Number
             # Prevent Further k_p increases
             if root.ctr > 1:
-            	print("Reached RESET Position")
+                print("Reached RESET Position")
             root.ctr = 0
 
         # Simple P-controller
         return self.k_p * err
 
-	def predict(self, observation):
-		force = np.zeros(9)
+    def predict(self, observation):
+        force = np.zeros(9)
 
-		if self.machine.is_reset:
-			force = self.reset()
+        if self.machine.is_reset:
+            force = self.reset()
 
-		return force
+        return force

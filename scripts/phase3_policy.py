@@ -8,12 +8,11 @@ import numpy as np
 import pybullet
 import robot_interfaces
 from rrc_example_package import cube_env
-from trifinger_simulation.tasks import move_cuboid
+from trifinger_simulation.tasks import move_cube
 
 from machines.level1 import MachinePolicy as Level1Machine
 from machines.level3 import MachinePolicy as Level3Machine
 from machines.level4 import MachinePolicy as Level4Machine
-
 
 class StateSpacePolicy:
     """Policy references one of many sub-state machines."""

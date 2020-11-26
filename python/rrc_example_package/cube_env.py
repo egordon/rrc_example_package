@@ -9,6 +9,12 @@ import trifinger_simulation
 import trifinger_simulation.visual_objects
 from trifinger_simulation import trifingerpro_limits
 from trifinger_simulation.tasks import move_cube
+from rrc_simulation import visual_objects
+
+from rrc_simulation.sim_finger import SimFinger
+import numpy as np
+# from rrc_simulation import pinocchio_utils
+from rrc_simulation import TriFingerPlatform
 
 
 class ActionType(enum.Enum):
@@ -71,6 +77,22 @@ class RealRobotCubeEnv(gym.GoalEnv):
         # will be initialized in reset()
         self.platform = None
 
+        # self.simfinger = SimFinger(
+        #     finger_type="trifingerpro",
+        #     time_step=1. / self.frameskip,
+        #     enable_visualization=False,
+        # )
+
+        # print ("num_fingers: ", self.simfinger.number_of_fingers)
+        # self.goal_marker = visual_objects.CubeMarker(
+        #     width=0.065,
+        #     position=self.goal["position"],
+        #     orientation=self.goal["orientation"],
+        #     physicsClientId=self.simfinger._pybullet_client_id,
+        # )
+
+        self.sim_platform = None
+
         # Create the action and observation spaces
         # ========================================
 
@@ -131,6 +153,14 @@ class RealRobotCubeEnv(gym.GoalEnv):
                         "position": robot_position_space,
                         "velocity": robot_velocity_space,
                         "torque": robot_torque_space,
+                        "tip_positions": gym.spaces.Box(
+                            low=np.array(
+                                [trifingerpro_limits.object_position.low] * 3),
+                            high=np.array(
+                                [trifingerpro_limits.object_position.high] * 3),
+                        ),
+                        "tip_force": gym.spaces.Box(low=np.zeros(3),
+                                                    high=np.ones(3)),
                     }
                 ),
                 "action": self.action_space,
@@ -208,8 +238,21 @@ class RealRobotCubeEnv(gym.GoalEnv):
             # send action to robot
             robot_action = self._gym_action_to_robot_action(action)
             t = self.platform.append_desired_action(robot_action)
+            self.platform.wait_until_timeindex(t)
 
             observation = self._create_observation(t, action)
+            self.sim_platform.cube.set_state(
+                observation["achieved_goal"]["position"],
+                observation["achieved_goal"]["orientation"]
+            )
+            self.sim_platform.simfinger.reset_finger_positions_and_velocities(
+                observation["observation"]["position"],
+                observation["observation"]["velocity"]
+            )
+            # self.simfinger.reset_finger_positions_and_velocities(
+            #     observation["observation"]["position"],
+            #     observation["observation"]["velocity"]
+            # )
 
             reward += self.compute_reward(
                 observation["achieved_goal"],
@@ -232,14 +275,38 @@ class RealRobotCubeEnv(gym.GoalEnv):
         # the direct simulation, which may be more convenient if you want to
         # pre-train locally in simulation.
         self._reset_platform_frontend()
+        if self.sim_platform:
+            del self.sim_platform
+
+        initial_robot_position = TriFingerPlatform.spaces.robot_position.default
+        default_object_position = (
+            TriFingerPlatform.spaces.object_position.default)
+        default_object_orientation = (
+            TriFingerPlatform.spaces.object_orientation.default)
+        dummy_initial_object_pose = move_cube.Pose(
+            position=default_object_position,
+            orientation=default_object_orientation,
+        )
+        self.sim_platform = TriFingerPlatform(
+            visualization=False,
+            initial_robot_position=initial_robot_position,
+            initial_object_pose=dummy_initial_object_pose,
+        )
+        # self.goal_marker = visual_objects.CubeMarker(
+        #         width=0.065,
+        #         position=self.goal["position"],
+        #         orientation=self.goal["orientation"],
+        #         physicsClientId=self.sim_platform.simfinger._pybullet_client_id,
+        #     )
+
         # self._reset_direct_simulation()
 
+        
         self.step_count = 0
 
         # need to already do one step to get initial observation
         # TODO disable frameskip here?
         observation, _, _, _ = self.step(self._initial_action)
-
         return observation
 
     def _reset_platform_frontend(self):
@@ -300,18 +367,20 @@ class RealRobotCubeEnv(gym.GoalEnv):
     def _create_observation(self, t, action):
         robot_observation = self.platform.get_robot_observation(t)
         camera_observation = self.platform.get_camera_observation(t)
-
+        # print ("CHECK: ", self.sim_platform)
         observation = {
             "observation": {
                 "position": robot_observation.position,
                 "velocity": robot_observation.velocity,
                 "torque": robot_observation.torque,
+                "tip_positions": np.array(self.sim_platform.simfinger.pinocchio_utils.forward_kinematics(robot_observation.position)),
+                "tip_force": robot_observation.tip_force,
             },
             "action": action,
             "desired_goal": self.goal,
             "achieved_goal": {
-                "position": camera_observation.object_pose.position,
-                "orientation": camera_observation.object_pose.orientation,
+                "position": camera_observation.filtered_object_pose.position,
+                "orientation": camera_observation.filtered_object_pose.orientation,
             },
         }
         return observation

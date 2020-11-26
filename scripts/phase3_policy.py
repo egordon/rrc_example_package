@@ -21,6 +21,7 @@ class StateSpacePolicy:
         self.machine = None
         self.difficulty = difficulty
         self.finger = env.sim_platform.simfinger
+        self.DAMP = 1E-6
 
         # Variables Accessible to Sub-Machines
         self.t = 0

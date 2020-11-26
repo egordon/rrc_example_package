@@ -1,7 +1,13 @@
-Example Package for the Real Robot Challenge Submission System
+Real Robot Challenge, Personal Robotics Lab, Phase 3
 ==============================================================
 
+Phase 1 can be found [here](https://github.com/egordon/rrc_simulation)
 
+Phase 2 can be found [here](https://github.com/madan96/rrc_example_package)
+
+
+Previous ReadMe
+==============================================================
 This is a basic example for a package that can be submitted to the robots of
 the [Real Robot Challenge](https://real-robot-challenge.com).
 

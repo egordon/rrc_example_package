@@ -8,7 +8,7 @@ from .utils import get_rest_arm
 _CUBOID_WIDTH = 0.02
 _CUBOID_HEIGHT = 0.08
 
-def _get_tip_poses(observation):
+def get_tip_poses(observation):
     return observation["observation"]["tip_positions"].flatten()
 
 class RRCMachine(StateMachine):
@@ -61,7 +61,7 @@ class MachinePolicy:
     def align(self, observation):
         # Get rest arm
         # Align the other two arms around cuboid on opposite directions
-        current = self._get_tip_poses(observation)
+        current = get_tip_poses(observation)
         current_pos = observation["achieved_goal"]["position"]
         rest_arm = get_rest_arm(observation)
 

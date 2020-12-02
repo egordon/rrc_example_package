@@ -93,7 +93,7 @@ class MachinePolicy:
         err = desired - current
         if np.linalg.norm(err) < 0.01:
             print("Reached ALIGN state")
-            print("[ALIGN]: K_p ", self.k_p)
+            print("[ALIGN]: K_p ", self.root.k_p)
             self.root.k_p = 0.4
             self.ctr = 0
 

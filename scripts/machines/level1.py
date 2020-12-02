@@ -68,7 +68,7 @@ class MachinePolicy:
         # Align the other two arms around cuboid on opposite directions
         current = get_tip_poses(observation)
         current_pos = observation["achieved_goal"]["position"]
-        rest_arm = get_rest_arm(observation)
+        rest_arm, manip_axis = get_rest_arm(observation)
 
         # Determine arm locations
         locs = [np.zeros(3), np.zeros(3), np.zeros(3)]
@@ -77,7 +77,7 @@ class MachinePolicy:
             index = (rest_arm + 1 - i) % 3
             locs[index] = 1.5 * \
                 R.from_rotvec(
-                    np.pi/2 * (i-1.0) * np.array([0, 0, 1])).apply(rest_arm)
+                    np.pi/2 * (i-1.0) * np.array([0, 0, 1])).apply(manip_axis)
             locs[index][2] = 2
 
         desired = np.tile(current_pos, 3) + \

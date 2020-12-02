@@ -24,6 +24,10 @@ class StateSpacePolicy:
         self.DAMP = 1E-6
         self.gain_increase_factor = 1.2
 
+        # Cuboid dimensions
+        self.CUBOID_HEIGHT = 0.08
+        self.CUBOID_WIDTH = 0.02
+
         # Variables Accessible to Sub-Machines
         self.t = 0
         self.k_p = 0.4

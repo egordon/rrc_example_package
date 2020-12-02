@@ -4,12 +4,16 @@ import numpy as np
 
 from statemachine import StateMachine, State
 from .utils import get_rest_arm
+from scipy.spatial.transform import Rotation as R
+
 
 _CUBOID_WIDTH = 0.02
 _CUBOID_HEIGHT = 0.08
 
+
 def get_tip_poses(observation):
     return observation["observation"]["tip_positions"].flatten()
+
 
 class RRCMachine(StateMachine):
     reset = State('RESET', initial=True)
@@ -21,9 +25,10 @@ class RRCMachine(StateMachine):
 
     def on_enter_reset(self):
         print('Entering RESET!')
-    
+
     def on_enter_align(self):
         print('Entering ALIGN!')
+
 
 class MachinePolicy:
 
@@ -47,7 +52,7 @@ class MachinePolicy:
         err = desired - current
 
         # Reached Goal
-        if np.linalg.norm(err) < 0.02: # TODO: Remove Magic Number
+        if np.linalg.norm(err) < 0.02:  # TODO: Remove Magic Number
             # Prevent Further k_p increases
             if self.root.ctr > 1:
                 print("Reached RESET Position")
@@ -82,11 +87,12 @@ class MachinePolicy:
         upward_desired = np.array(
             self.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
 
-        desired[rest_arm * 3: (rest_arm + 1) * 3] = upward_desired[rest_arm * 3: (rest_arm + 1) * 3]
+        desired[rest_arm * 3: (rest_arm + 1) *
+                3] = upward_desired[rest_arm * 3: (rest_arm + 1) * 3]
 
         err = desired - current
         if np.linalg.norm(err) < 0.01:
-            print ("Reached ALIGN state")
+            print("Reached ALIGN state")
             print("[ALIGN]: K_p ", self.k_p)
             self.root.k_p = 0.4
             self.ctr = 0

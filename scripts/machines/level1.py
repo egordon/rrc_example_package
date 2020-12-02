@@ -69,10 +69,10 @@ class MachinePolicy:
         locs = [np.zeros(3), np.zeros(3), np.zeros(3)]
 
         for i in range(3):
-            index = (self.manip_arm + 1 - i) % 3
+            index = (rest_arm + 1 - i) % 3
             locs[index] = 1.5 * \
                 R.from_rotvec(
-                    np.pi/2 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
+                    np.pi/2 * (i-1.0) * np.array([0, 0, 1])).apply(rest_arm)
             locs[index][2] = 2
 
         desired = np.tile(current_pos, 3) + \
@@ -86,9 +86,7 @@ class MachinePolicy:
 
         err = desired - current
         if np.linalg.norm(err) < 0.01:
-            self.state = States.LOWER
-            print("[ALIGN]: Switching to PRE LOWER at ",
-                    time.time() - self.start_time)
+            print ("Reached ALIGN state")
             print("[ALIGN]: K_p ", self.k_p)
             self.root.k_p = 0.4
             self.ctr = 0

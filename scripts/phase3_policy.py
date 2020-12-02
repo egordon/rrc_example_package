@@ -25,8 +25,8 @@ class StateSpacePolicy:
         self.gain_increase_factor = 1.2
 
         # Cuboid dimensions
-        self.CUBOID_HEIGHT = 0.08
-        self.CUBOID_WIDTH = 0.02
+        self.CUBOID_HEIGHT = 0.04 # full height 0.08
+        self.CUBOID_WIDTH = 0.01 # full width 0.02
 
         # Variables Accessible to Sub-Machines
         self.t = 0

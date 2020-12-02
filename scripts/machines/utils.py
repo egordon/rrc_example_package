@@ -17,4 +17,5 @@ def get_rest_arm(observation):
     else:
         rest_arm = 2
     
-    return rest_arm
+    manip_axis[2] = 0
+    return rest_arm, manip_axis

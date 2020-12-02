@@ -3,7 +3,7 @@
 import numpy as np
 
 from statemachine import StateMachine, State
-from utils import get_rest_arm
+from .utils import get_rest_arm
 
 _CUBOID_WIDTH = 0.02
 _CUBOID_HEIGHT = 0.08

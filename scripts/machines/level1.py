@@ -53,6 +53,7 @@ class MachinePolicy:
                 print("Reached RESET Position")
             self.root.ctr = 0
             self.root.k_p = 0.4
+            self.machine.start()
 
         # Simple P-controller
         return self.root.k_p * err

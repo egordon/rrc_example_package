@@ -95,7 +95,7 @@ class MachinePolicy:
             print("Reached ALIGN state")
             print("[ALIGN]: K_p ", self.root.k_p)
             self.root.k_p = 0.4
-            self.ctr = 0
+            self.root.ctr = 0
 
         return self.root.k_p * err
 

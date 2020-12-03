@@ -19,3 +19,19 @@ def get_rest_arm(observation):
     
     manip_axis[2] = 0
     return rest_arm, manip_axis
+
+def get_yaw(observation):
+    current = observation["achieved_goal"]["orientation"]
+
+    axis = [1., 0., 0.]
+    manip_axis = R.from_quat(current).apply(axis)
+
+    rot = R.from_quat(current)
+    yaw = R.as_euler('zyx')[0]
+    if yaw > -90.0 and yaw <= 30.0:
+        rest_arm = 1
+    elif yaw > 30.0 and yaw <= 150:
+        rest_arm = 0
+    else:
+        rest_arm = 2
+    return rest_arm, manip_axis

@@ -3,7 +3,7 @@
 import numpy as np
 
 from statemachine import StateMachine, State
-from .utils import get_rest_arm
+from .utils import get_rest_arm, get_yaw
 from scipy.spatial.transform import Rotation as R
 
 
@@ -58,6 +58,7 @@ class MachinePolicy:
                 print("Reached RESET Position")
             self.root.ctr = 0
             self.root.k_p = 0.4
+            self.rest_arm, self.manip_axis = get_yaw(observation)
             self.machine.start()
 
         # Simple P-controller
@@ -68,16 +69,15 @@ class MachinePolicy:
         # Align the other two arms around cuboid on opposite directions
         current = get_tip_poses(observation)
         current_pos = observation["achieved_goal"]["position"]
-        rest_arm, manip_axis = get_rest_arm(observation)
 
         # Determine arm locations
         locs = [np.zeros(3), np.zeros(3), np.zeros(3)]
 
         for i in range(3):
-            index = (rest_arm + 1 - i) % 3
+            index = (self.rest_arm + 1 - i) % 3
             locs[index] = 1.5 * \
                 R.from_rotvec(
-                    np.pi/2 * (i-1.0) * np.array([0, 0, 1])).apply(manip_axis)
+                    np.pi/2 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 2
 
         desired = np.tile(current_pos, 3) + \
@@ -88,7 +88,7 @@ class MachinePolicy:
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
 
         desired[rest_arm * 3: (rest_arm + 1) *
-                3] = upward_desired[rest_arm * 3: (rest_arm + 1) * 3]
+                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
         err = desired - current
         if np.linalg.norm(err) < 0.01:

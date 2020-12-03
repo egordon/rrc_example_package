@@ -27,7 +27,7 @@ def get_yaw(observation):
     manip_axis = R.from_quat(current).apply(axis)
 
     rot = R.from_quat(current)
-    yaw = R.as_euler('zyx')[0]
+    yaw = rot.as_euler('zyx')[0]
     if yaw > -90.0 and yaw <= 30.0:
         rest_arm = 1
     elif yaw > 30.0 and yaw <= 150:

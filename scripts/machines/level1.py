@@ -69,6 +69,8 @@ class MachinePolicy:
         # Align the other two arms around cuboid on opposite directions
         current = get_tip_poses(observation)
         current_pos = observation["achieved_goal"]["position"]
+        print ("current pos: ", current_pos)
+        print ("current orient: ", observation["achieved_goal"]["orientation"])
 
         # Determine arm locations
         locs = [np.zeros(3), np.zeros(3), np.zeros(3)]

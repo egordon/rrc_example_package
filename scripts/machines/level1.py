@@ -3,7 +3,7 @@
 import numpy as np
 
 from statemachine import StateMachine, State
-from .utils import get_rest_arm, get_yaw
+from .utils import get_rest_arm, get_rest_arm2
 from scipy.spatial.transform import Rotation as R
 
 
@@ -58,7 +58,7 @@ class MachinePolicy:
                 print("Reached RESET Position")
             self.root.ctr = 0
             self.root.k_p = 0.4
-            self.rest_arm, self.manip_axis = get_yaw(observation)
+            self.rest_arm, self.manip_axis = get_rest_arm2(observation)
             self.machine.start()
 
         # Simple P-controller

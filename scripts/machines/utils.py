@@ -20,7 +20,7 @@ def get_rest_arm(observation):
     manip_axis[2] = 0
     return rest_arm, manip_axis
 
-def get_yaw(observation):
+def get_rest_arm2(observation):
     current = observation["achieved_goal"]["orientation"]
 
     axis = [1., 0., 0.]

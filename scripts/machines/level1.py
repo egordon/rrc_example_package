@@ -87,7 +87,7 @@ class MachinePolicy:
         upward_desired = np.array(
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
 
-        desired[rest_arm * 3: (rest_arm + 1) *
+        desired[self.rest_arm * 3: (self.rest_arm + 1) *
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
         err = desired - current

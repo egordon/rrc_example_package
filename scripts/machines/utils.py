@@ -25,6 +25,7 @@ def get_rest_arm2(observation):
 
     axis = [1., 0., 0.]
     manip_axis = R.from_quat(current).apply(axis)
+    manip_axis[0] *= -1
 
     rot = R.from_quat(current)
     yaw = rot.as_euler('zyx', degrees=True)[0]

@@ -151,8 +151,10 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached LOWER state")
             print("[LOWER]: K_p ", self.root.k_p)
-            self.root.k_p = 0.4
+            self.root.k_p = 0.7
             self.root.ctr = 0
+            self.root.gain_increase_factor = 1.04
+            self.root.interval = 1800
             self.machine.grasp()
 
         return self.root.k_p * err
@@ -216,9 +218,10 @@ class MachinePolicy:
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.root.k_p = 0.65
             self.root.ctr = 0
-            self.machine.move_to_goal()
             self.root.gain_increase_factor = 1.04
             self.root.interval = 1800
+            self.machine.move_to_goal()
+            
 
         self.goal_err_sum = np.zeros(9)
         return self.root.k_p * err
@@ -226,6 +229,7 @@ class MachinePolicy:
     def goal(self, observation):
         if self.goal_begin_time is None:
             self.goal_begin_time = time.time()
+
         current = get_tip_poses(observation)
         current_x = current[0::3]
         difference = [abs(p1 - p2)
@@ -287,6 +291,7 @@ class MachinePolicy:
             self.root.goal_reached = True
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.0
+            self.goal_begin_time = None
 
         # if self.goal_reached and self.difficulty == 4:
         #    self.state = States.ORIENT

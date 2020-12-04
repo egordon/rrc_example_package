@@ -233,7 +233,7 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.root.k_p = 0.5
+            self.root.k_p = 0.4
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.04
             self.root.interval = 1500

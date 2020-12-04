@@ -29,6 +29,7 @@ class RRCMachine(StateMachine):
     grasp = lower.to(into)
     move_to_goal = into.to(goal)
 
+    recover_from_lower = lower.to(reset)
     recover_from_into = into.to(reset)
     recover_from_goal = goal.to(reset)
 
@@ -58,6 +59,7 @@ class MachinePolicy:
         self.machine = RRCMachine()
 
         # state begin time variables
+        self.lower_begin_time = None
         self.into_begin_time = None
         self.goal_begin_time = None
 
@@ -119,7 +121,7 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached ALIGN state")
             print("[ALIGN]: K_p ", self.root.k_p)
-            self.root.k_p = 0.4
+            self.root.k_p = 0.5
             self.root.ctr = 0
             self.prev_align = desired
             self.machine.lowering()
@@ -127,7 +129,19 @@ class MachinePolicy:
         return self.root.k_p * err
 
     def lower(self, observation):
+        if self.lower_begin_time is None:
+            self.lower_begin_time = time.time()
         current = get_tip_poses(observation)
+
+        if time.time() - self.lower_begin_time > 10.0:
+            print("[LOWER]: Switching to RESET at ",
+                  time.time() - self.root.start_time)
+            print("[LOWER]: K_p ", self.root.k_p)
+            print("[LOWER]: Cube pos ", observation['achieved_goal']['position'])
+            self.root.k_p = 0.5
+            self.root.ctr = 0
+            self.lower_begin_time = None
+            self.machine.recover_from_lower()
 
         x, y = observation["achieved_goal"]["position"][:2]
         z = self.root.CUBOID_WIDTH
@@ -256,7 +270,7 @@ class MachinePolicy:
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
         if self.root.difficulty == 1 and not self.root.goal_reached:
-            goal[2] += 0.007  # Reduces friction with floor
+            goal[2] += 0.001  # Reduces friction with floor
         goal_err = goal - desired
         err_mag = np.linalg.norm(goal_err[:3])
 
@@ -284,8 +298,9 @@ class MachinePolicy:
             print("[GOAL] Error magnitude ", err_mag, " K_p ",
                   k_p, " time: ", time.time() - self.root.start_time)
 
-        if err_mag > 0.015:
+        if err_mag > 0.02:
             self.root.goal_reached = False
+            self.root.success_ctr = 0
 
         if err_mag < 0.01:
             self.root.success_ctr += 1
@@ -294,7 +309,7 @@ class MachinePolicy:
             print("[GOAL]: Goal state achieved")
             print("[GOAL]: K_p ", self.root.k_p)
             self.root.goal_reached = True
-            self.root.ctr = 0
+            # self.root.ctr = 0
             self.root.gain_increase_factor = 1.0
             self.goal_begin_time = None
 

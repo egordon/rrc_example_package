@@ -121,9 +121,11 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached ALIGN state")
             print("[ALIGN]: K_p ", self.root.k_p)
-            self.root.k_p = 0.5
+            self.root.k_p = 0.4
             self.root.ctr = 0
             self.prev_align = desired
+            self.interval = 300
+            self.gain_increase_factor = 1.1
             self.machine.lowering()
 
         return self.root.k_p * err
@@ -224,7 +226,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.02 and i != self.rest_arm:
+            if f < 0.015 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")
@@ -233,10 +235,10 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.root.k_p = 0.3
+            self.root.k_p = 0.15
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.04
-            self.root.interval = 1000
+            self.root.gain_increase_factor = 1.1
+            self.root.interval = 1600
             self.into_begin_time = None
             self.machine.move_to_goal()
             
@@ -270,7 +272,7 @@ class MachinePolicy:
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
         if self.root.difficulty == 1 and not self.root.goal_reached:
-            goal[2] += 0.005  # Reduces friction with floor
+            goal[2] += 0.006  # Reduces friction with floor
         goal_err = goal - desired
         err_mag = np.linalg.norm(goal_err[:3])
 
@@ -278,7 +280,7 @@ class MachinePolicy:
             self.goal_err_sum += goal_err
 
         if self.root.difficulty == 1:
-            time_threshold = 20.0
+            time_threshold = 40.0
         else:
             time_threshold = 30.0
 

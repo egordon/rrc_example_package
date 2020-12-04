@@ -23,12 +23,12 @@ def get_rest_arm(observation):
 def get_rest_arm2(observation):
     current = observation["achieved_goal"]["orientation"]
 
-    axis = [1., 0., 0.]
+    axis = [0., 1., 0.]
     manip_axis = R.from_quat(current).apply(axis)
-    manip_axis[0] *= -1
 
     rot = R.from_quat(current)
-    yaw = rot.as_euler('zyx', degrees=True)[0]
+    yaw = np.arctan2(manip_axis[1], manip_axis[0]) * 180. / np.pi
+
     if yaw > -90.0 and yaw <= 30.0:
         rest_arm = 1
     elif yaw > 30.0 and yaw <= 150:

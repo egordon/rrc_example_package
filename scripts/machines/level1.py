@@ -253,7 +253,7 @@ class MachinePolicy:
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
-        k_p = min(5.0, self.root.k_p)
+        k_p = min(0.79, self.root.k_p)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
@@ -298,7 +298,7 @@ class MachinePolicy:
             print("[GOAL] Error magnitude ", err_mag, " K_p ",
                   k_p, " time: ", time.time() - self.root.start_time)
 
-        if err_mag > 0.02:
+        if err_mag > 0.015:
             self.root.goal_reached = False
             self.root.success_ctr = 0
 
@@ -311,7 +311,7 @@ class MachinePolicy:
             self.root.goal_reached = True
             # self.root.ctr = 0
             self.root.gain_increase_factor = 1.0
-            self.goal_begin_time = None
+            # self.goal_begin_time = None
 
         # if self.goal_reached and self.difficulty == 4:
         #    self.state = States.ORIENT

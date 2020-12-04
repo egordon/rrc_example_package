@@ -209,8 +209,8 @@ class MachinePolicy:
             self.root.k_p = 0.65
             self.root.ctr = 0
             self.machine.move_to_goal()
-            # self.root.gain_increase_factor = 1.04
-            # self.root.interval = 1800
+            self.root.gain_increase_factor = 1.04
+            self.root.interval = 1800
 
         self.goal_err_sum = np.zeros(9)
         return self.root.k_p * err

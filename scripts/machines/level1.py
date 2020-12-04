@@ -274,7 +274,10 @@ class MachinePolicy:
         if self.root.difficulty == 1 and not self.root.goal_reached:
             goal[2] += 0.006  # Reduces friction with floor
         goal_err = goal - desired
-        err_mag = np.linalg.norm(goal_err[:3])
+        if self.rest_arm == 0:
+            err_mag = np.linalg.norm(goal_err[3:6])
+        else:
+            err_mag = np.linalg.norm(goal_err[:3])
 
         if err_mag < 0.1:
             self.goal_err_sum += goal_err

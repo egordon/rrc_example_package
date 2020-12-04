@@ -32,8 +32,10 @@ class StateSpacePolicy:
         self.t = 0
         self.k_p = 0.4
         self.ctr = 0
+        self.success_ctr = 0
         self.interval = 100
         self.start_time = None
+        self.goal_reached = False
 
         # Set Submachine
         if difficulty == 1:

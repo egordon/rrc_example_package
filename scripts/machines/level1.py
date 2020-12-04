@@ -20,12 +20,14 @@ class RRCMachine(StateMachine):
     align = State('ALIGN')
     lower = State('LOWER')
     into = State('INTO')
+    goal = State('GOAL')
 
     # restart = reset.to(reset)
     start = reset.to(align)
     lowering = align.to(lower)
     grasp = lower.to(into)
-    recover = into.to(reset)
+    move_to_goal = into.to(goal)
+    recover = goal.to(reset)
 
     def on_enter_reset(self):
         print('Entering RESET!')
@@ -38,6 +40,9 @@ class RRCMachine(StateMachine):
     
     def on_enter_into(self):
         print('Entering INTO!')
+    
+    def on_enter_goal(self):
+        print('Entering GOAL!')
 
 
 class MachinePolicy:
@@ -202,12 +207,79 @@ class MachinePolicy:
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.root.k_p = 0.65
             self.root.ctr = 0
-            self.machine.recover()
+            self.machine.move_to_goal()
             # self.root.gain_increase_factor = 1.04
             # self.root.interval = 1800
 
         self.goal_err_sum = np.zeros(9)
         return self.root.k_p * err
+
+    def goal(self, observation):
+        # if self.goal_begin_time is None:
+        #     self.goal_begin_time = time.time()
+        current = get_tip_poses(observation)
+        current_x = current[0::3]
+        difference = [abs(p1 - p2)
+                      for p1 in current_x for p2 in current_x if p1 != p2]
+
+        k_p = min(0.79, self.root.k_p)
+        desired = np.tile(observation["achieved_goal"]["position"], 3)
+
+        into_err = desired - current
+        into_err /= np.linalg.norm(into_err)
+
+        goal = np.tile(observation["desired_goal"]["position"], 3)
+        if self.root.difficulty == 1 and not self.root.goal_reached:
+            goal[2] += 0.007  # Reduces friction with floor
+        goal_err = goal - desired
+        err_mag = np.linalg.norm(goal_err[:3])
+
+        if err_mag < 0.1:
+            self.goal_err_sum += goal_err
+
+        if self.root.difficulty == 1:
+            time_threshold = 20.0
+        else:
+            time_threshold = 30.0
+
+        # if not self.root.goal_reached and time.time() - self.goal_begin_time > time_threshold:
+        #     self.state = States.RESET
+        #     print("[GOAL]: Switching to RESET at ",
+        #           time.time() - self.start_time)
+        #     print("[GOAL]: K_p ", self.k_p)
+        #     print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
+        #     self.k_p = 0.5
+        #     self.interval = 100
+        #     self.gain_increase_factor = 1.2
+        #     self.ctr = 0
+        #     self.goal_begin_time = None
+
+        # if not self.goal_reached:
+        #     print("[GOAL] Error magnitude ", err_mag, " K_p ",
+        #           k_p, " time: ", time.time() - self.start_time)
+
+        if err_mag > 0.015:
+            self.goal_reached = False
+
+        if err_mag < 0.01:
+            self.root.success_ctr += 1
+
+        if not self.root.goal_reached and err_mag < 0.01 and self.root.success_ctr > 20:
+            print("[GOAL]: Goal state achieved")
+            print("[GOAL]: K_p ", self.root.k_p)
+            self.root.goal_reached = True
+            self.root.ctr = 0
+            self.root.gain_increase_factor = 1.0
+
+        # if self.goal_reached and self.difficulty == 4:
+        #    self.state = States.ORIENT
+        #    print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
+        #    self.ctr = 0
+        #    self.goal_reached = False
+        #    self.goal_begin_time = None
+
+        return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
+
 
     def predict(self, observation):
         force = np.zeros(9)

@@ -327,7 +327,7 @@ class MachinePolicy:
         #    self.goal_reached = False
         #    self.goal_begin_time = None
 
-        return k_p * goal_err + 0.25 * into_err + 0.002 * self.goal_err_sum
+        return k_p * goal_err + 0.1 * into_err + 0.002 * self.goal_err_sum
 
 
     def predict(self, observation):

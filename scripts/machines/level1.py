@@ -137,6 +137,7 @@ class MachinePolicy:
 
         err = desired - current
         if np.linalg.norm(err) < 0.01:
+            print("Reached LOWER state")
             print("[LOWER]: K_p ", self.root.k_p)
             self.root.k_p = 0.4
             self.root.ctr = 0
@@ -176,6 +177,12 @@ class MachinePolicy:
         x, y = observation["achieved_goal"]["position"][:2]
         z = self.root.CUBOID_WIDTH
         desired = np.tile(np.array([x, y, z]), 3)
+        up_position = np.array([0.5, 1.2, -2.4] * 3)
+        upward_desired = np.array(
+            self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+
+        desired[self.rest_arm * 3: (self.rest_arm + 1) *
+                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
         err = desired - current
 
@@ -187,6 +194,7 @@ class MachinePolicy:
             if f < 0.08:
                 switch = False
         if switch:
+            print("Reached INTO state")
             print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
             # print("[INTO]: Switching to GOAL at ",
             #       time.time() - self.start_time)

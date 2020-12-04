@@ -167,7 +167,7 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached LOWER state")
             print("[LOWER]: K_p ", self.root.k_p)
-            self.root.k_p = 0.7
+            self.root.k_p = 0.3
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.1
             self.root.interval = 200

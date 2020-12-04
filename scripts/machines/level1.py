@@ -170,7 +170,7 @@ class MachinePolicy:
         difference_y = [abs(p1 - p2)
                         for p1 in current_y for p2 in current_y if p1 != p2]
 
-        k_p = min(5.0, self.root.k_p)
+        k_p = min(10.0, self.root.k_p)
         if self.root.difficulty == 3:
             time_threshold = 5.0  # based on experimental observation
         else:
@@ -179,18 +179,6 @@ class MachinePolicy:
         close_x = any(d < 0.0001 for d in difference_x)
         close_y = any(d < 0.0001 for d in difference_y)
         close = close_x and close_y
-
-        if close or time.time() - self.into_begin_time > time_threshold:
-            print("[INTO]: Switching to RESET at ",
-                  time.time() - self.root.start_time)
-            print("[INTO]: K_p ", self.root.k_p)
-            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.root.k_p = 0.5
-            self.root.interval = 200
-            self.root.gain_increase_factor = 1.2
-            self.root.ctr = 0
-            self.into_begin_time = None
-            self.machine.recover_from_into()
 
         x, y = observation["achieved_goal"]["position"][:2]
         z = self.root.CUBOID_WIDTH
@@ -207,6 +195,19 @@ class MachinePolicy:
         # Read Tip Force
         tip_forces = observation["observation"]["tip_force"] - \
             self.force_offset
+
+        if close or time.time() - self.into_begin_time > time_threshold:
+            print("[INTO]: Switching to RESET at ",
+                  time.time() - self.root.start_time)
+            print("[INTO]: K_p ", self.root.k_p)
+            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.root.k_p = 0.5
+            self.root.interval = 200
+            self.root.gain_increase_factor = 1.2
+            self.root.ctr = 0
+            self.into_begin_time = None
+            self.machine.recover_from_into()
+
         switch = True
         for i, f in enumerate(tip_forces):
             if f < 0.05 and i != self.rest_arm:

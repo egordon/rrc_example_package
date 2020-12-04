@@ -305,7 +305,7 @@ class MachinePolicy:
         if err_mag < 0.01:
             self.root.success_ctr += 1
 
-        if not self.root.goal_reached and err_mag < 0.01 and self.root.success_ctr > 20:
+        if not self.root.goal_reached and err_mag < 0.01 and self.root.success_ctr > 50:
             print("[GOAL]: Goal state achieved")
             print("[GOAL]: K_p ", self.root.k_p)
             self.root.goal_reached = True

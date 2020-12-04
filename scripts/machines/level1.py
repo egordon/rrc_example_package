@@ -196,7 +196,8 @@ class MachinePolicy:
             self.force_offset
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.08 and i != self.rest_arm:
+            print ("Arm: ", i, " Force: ", f)
+            if f < 0.05 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")

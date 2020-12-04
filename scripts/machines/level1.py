@@ -103,6 +103,7 @@ class MachinePolicy:
             print("[ALIGN]: K_p ", self.root.k_p)
             self.root.k_p = 0.4
             self.root.ctr = 0
+            self.prev_align = desired
             self.machine.lowering()
 
         return self.root.k_p * err
@@ -117,7 +118,8 @@ class MachinePolicy:
             (self.root.CUBOID_WIDTH + 0.015) * \
             np.array([0, 1.6, 0.015, 1.6 * 0.866, 1.6 * (-0.5),
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
-        
+        desired = self.prev_align
+        desired[2::3] = [self.root.CUBOID_WIDTH] * 3
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()

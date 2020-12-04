@@ -29,8 +29,8 @@ class RRCMachine(StateMachine):
     grasp = lower.to(into)
     move_to_goal = into.to(goal)
 
-    recover = goal.to(reset)
     recover_from_into = into.to(reset)
+    recover_from_goal = goal.to(reset)
 
     def on_enter_reset(self):
         print('Entering RESET!')
@@ -153,8 +153,8 @@ class MachinePolicy:
             print("[LOWER]: K_p ", self.root.k_p)
             self.root.k_p = 0.7
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.04
-            self.root.interval = 1800
+            self.root.gain_increase_factor = 1.1
+            self.root.interval = 500
             self.machine.grasp()
 
         return self.root.k_p * err
@@ -170,7 +170,7 @@ class MachinePolicy:
         difference_y = [abs(p1 - p2)
                         for p1 in current_y for p2 in current_y if p1 != p2]
 
-        k_p = min(8.0, self.root.k_p)
+        k_p = min(5.0, self.root.k_p)
         if self.root.difficulty == 3:
             time_threshold = 5.0  # based on experimental observation
         else:
@@ -185,8 +185,9 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.5
-            self.ctr = 0
+            self.root.k_p = 0.5
+            self.root.interval = 300
+            self.root.gain_increase_factor = 1.2
             self.into_begin_time = None
             self.machine.recover_from_into()
 
@@ -269,11 +270,12 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[GOAL]: K_p ", self.root.k_p)
             print("[GOAL]: Cube pos ", observation['achieved_goal']['position'])
-            self.k_p = 0.5
-            self.interval = 100
-            self.gain_increase_factor = 1.2
+            self.root.k_p = 0.5
+            self.root.interval = 100
+            self.root.gain_increase_factor = 1.2
             self.ctr = 0
             self.goal_begin_time = None
+            self.machine.recover_from_goal()
 
         if not self.root.goal_reached:
             print("[GOAL] Error magnitude ", err_mag, " K_p ",

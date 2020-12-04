@@ -33,7 +33,7 @@ class StateSpacePolicy:
         self.k_p = 0.4
         self.ctr = 0
         self.success_ctr = 0
-        self.interval = 100
+        self.interval = 300
         self.start_time = None
         self.goal_reached = False
 

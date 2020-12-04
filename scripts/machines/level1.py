@@ -32,10 +32,6 @@ class RRCMachine(StateMachine):
     recover = goal.to(reset)
     recover_from_into = into.to(reset)
 
-    # state begin time variables
-    self.into_begin_time = None
-    self.goal_begin_time = None
-
     def on_enter_reset(self):
         print('Entering RESET!')
 
@@ -60,6 +56,10 @@ class MachinePolicy:
 
         # State Machine
         self.machine = RRCMachine()
+
+        # state begin time variables
+        self.into_begin_time = None
+        self.goal_begin_time = None
 
     def reset(self, observation):
         # Get Current Position
@@ -158,8 +158,8 @@ class MachinePolicy:
         return self.root.k_p * err
     
     def into(self, observation):
-        if self.machine.into_begin_time is None:
-            self.machine.into_begin_time = time.time()
+        if self.into_begin_time is None:
+            self.into_begin_time = time.time()
         current = get_tip_poses(observation)
         current_x = current[0::3]
         current_y = current[1::3]
@@ -178,14 +178,14 @@ class MachinePolicy:
         close_y = any(d < 0.0001 for d in difference_y)
         close = close_x and close_y
 
-        if close or time.time() - self.machine.into_begin_time > time_threshold:
+        if close or time.time() - self.into_begin_time > time_threshold:
             print("[INTO]: Switching to RESET at ",
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.k_p = 0.5
             self.ctr = 0
-            self.machine.into_begin_time = None
+            self.into_begin_time = None
             self.machine.recover_from_into()
 
         x, y = observation["achieved_goal"]["position"][:2]
@@ -224,8 +224,8 @@ class MachinePolicy:
         return self.root.k_p * err
 
     def goal(self, observation):
-        if self.machine.goal_begin_time is None:
-            self.machine.goal_begin_time = time.time()
+        if self.goal_begin_time is None:
+            self.goal_begin_time = time.time()
         current = get_tip_poses(observation)
         current_x = current[0::3]
         difference = [abs(p1 - p2)
@@ -260,7 +260,7 @@ class MachinePolicy:
         else:
             time_threshold = 30.0
 
-        if not self.root.goal_reached and time.time() - self.machine.goal_begin_time > time_threshold:
+        if not self.root.goal_reached and time.time() - self.goal_begin_time > time_threshold:
             print("[GOAL]: Switching to RESET at ",
                   time.time() - self.root.start_time)
             print("[GOAL]: K_p ", self.root.k_p)

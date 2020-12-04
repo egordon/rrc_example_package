@@ -187,10 +187,7 @@ class MachinePolicy:
                         for p1 in current_y for p2 in current_y if p1 != p2]
 
         k_p = min(4.0, self.root.k_p)
-        if self.root.difficulty == 3:
-            time_threshold = 5.0  # based on experimental observation
-        else:
-            time_threshold = 15.0
+        time_threshold = 15.0
 
         close_x = any(d < 0.0001 for d in difference_x)
         close_y = any(d < 0.0001 for d in difference_y)

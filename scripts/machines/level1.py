@@ -224,7 +224,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.015 and i != self.rest_arm:
+            if f < 0.02 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")
@@ -290,7 +290,8 @@ class MachinePolicy:
             self.root.k_p = 0.5
             self.root.interval = 100
             self.root.gain_increase_factor = 1.2
-            self.ctr = 0
+            self.root.ctr = 0
+            self.root.success_ctr = 0
             self.goal_begin_time = None
             self.machine.recover_from_goal()
 

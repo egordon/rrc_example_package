@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """State Machine Policy"""
+import time
 import numpy as np
 
 from statemachine import StateMachine, State
@@ -196,14 +197,13 @@ class MachinePolicy:
             self.force_offset
         switch = True
         for i, f in enumerate(tip_forces):
-            print ("Arm: ", i, " Force: ", f)
             if f < 0.05 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")
             print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
-            # print("[INTO]: Switching to GOAL at ",
-            #       time.time() - self.start_time)
+            print("[INTO]: Switching to GOAL at ",
+                  time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.root.k_p = 0.65
@@ -223,13 +223,22 @@ class MachinePolicy:
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
-        k_p = min(0.79, self.root.k_p)
+        k_p = min(5.0, self.root.k_p)
+        up_position = np.array([0.5, 1.2, -2.4] * 3)
+        upward_desired = np.array(
+            self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+
         desired = np.tile(observation["achieved_goal"]["position"], 3)
+        desired[self.rest_arm * 3: (self.rest_arm + 1) *
+                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
 
         goal = np.tile(observation["desired_goal"]["position"], 3)
+        goal[self.rest_arm * 3: (self.rest_arm + 1) *
+                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+
         if self.root.difficulty == 1 and not self.root.goal_reached:
             goal[2] += 0.007  # Reduces friction with floor
         goal_err = goal - desired
@@ -255,12 +264,12 @@ class MachinePolicy:
         #     self.ctr = 0
         #     self.goal_begin_time = None
 
-        # if not self.goal_reached:
-        #     print("[GOAL] Error magnitude ", err_mag, " K_p ",
-        #           k_p, " time: ", time.time() - self.start_time)
+        if not self.root.goal_reached:
+            print("[GOAL] Error magnitude ", err_mag, " K_p ",
+                  k_p, " time: ", time.time() - self.root.start_time)
 
         if err_mag > 0.015:
-            self.goal_reached = False
+            self.root.goal_reached = False
 
         if err_mag < 0.01:
             self.root.success_ctr += 1

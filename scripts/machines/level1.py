@@ -154,7 +154,7 @@ class MachinePolicy:
             self.root.k_p = 0.7
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.1
-            self.root.interval = 500
+            self.root.interval = 200
             self.machine.grasp()
 
         return self.root.k_p * err
@@ -186,7 +186,7 @@ class MachinePolicy:
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
             self.root.k_p = 0.5
-            self.root.interval = 300
+            self.root.interval = 200
             self.root.gain_increase_factor = 1.2
             self.root.ctr = 0
             self.into_begin_time = None

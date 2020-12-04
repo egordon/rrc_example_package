@@ -19,11 +19,13 @@ class RRCMachine(StateMachine):
     reset = State('RESET', initial=True)
     align = State('ALIGN')
     lower = State('LOWER')
+    into = State('INTO')
 
     # restart = reset.to(reset)
     start = reset.to(align)
     lowering = align.to(lower)
-    recover = lower.to(reset)
+    grasp = lower.to(into)
+    recover = into.to(reset)
 
     def on_enter_reset(self):
         print('Entering RESET!')
@@ -33,6 +35,9 @@ class RRCMachine(StateMachine):
     
     def on_enter_lower(self):
         print('Entering LOWER!')
+    
+    def on_enter_into(self):
+        print('Entering INTO!')
 
 
 class MachinePolicy:
@@ -64,6 +69,7 @@ class MachinePolicy:
             self.root.ctr = 0
             self.root.k_p = 0.4
             self.rest_arm, self.manip_axis = get_rest_arm2(observation)
+            self.force_offset = observation["observation"]["tip_force"]
             self.machine.start()
 
         # Simple P-controller
@@ -118,6 +124,8 @@ class MachinePolicy:
             (self.root.CUBOID_WIDTH + 0.015) * \
             np.array([0, 1.6, 0.015, 1.6 * 0.866, 1.6 * (-0.5),
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
+
+        # testing with align xy values
         desired = self.prev_align
         desired[2::3] = [self.root.CUBOID_WIDTH] * 3
         up_position = np.array([0.5, 1.2, -2.4] * 3)
@@ -132,8 +140,65 @@ class MachinePolicy:
             print("[LOWER]: K_p ", self.root.k_p)
             self.root.k_p = 0.4
             self.root.ctr = 0
-            self.machine.recover()
+            self.machine.grasp()
 
+        return self.root.k_p * err
+    
+    def into(self, observation):
+        current = get_tip_poses(observation)
+        current_x = current[0::3]
+        current_y = current[1::3]
+        difference_x = [abs(p1 - p2)
+                        for p1 in current_x for p2 in current_x if p1 != p2]
+        difference_y = [abs(p1 - p2)
+                        for p1 in current_y for p2 in current_y if p1 != p2]
+
+        k_p = min(8.0, self.root.k_p)
+        if self.root.difficulty == 3:
+            time_threshold = 5.0  # based on experimental observation
+        else:
+            time_threshold = 15.0
+
+        close_x = any(d < 0.0001 for d in difference_x)
+        close_y = any(d < 0.0001 for d in difference_y)
+        close = close_x and close_y
+
+        # if close or time.time() - self.into_begin_time > time_threshold:
+        #     self.state = States.RESET
+        #     print("[INTO]: Switching to RESET at ",
+        #           time.time() - self.start_time)
+        #     print("[INTO]: K_p ", self.k_p)
+        #     print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+        #     self.k_p = 0.5
+        #     self.ctr = 0
+        #     self.into_begin_time = None
+
+        x, y = observation["achieved_goal"]["position"][:2]
+        z = self.root.CUBOID_WIDTH
+        desired = np.tile(np.array([x, y, z]), 3)
+
+        err = desired - current
+
+        # Read Tip Force
+        tip_forces = observation["observation"]["tip_force"] - \
+            self.force_offset
+        switch = True
+        for f in tip_forces:
+            if f < 0.08:
+                switch = False
+        if switch:
+            print("[INTO] Tip Forces ", observation["observation"]["tip_force"])
+            # print("[INTO]: Switching to GOAL at ",
+            #       time.time() - self.start_time)
+            print("[INTO]: K_p ", self.root.k_p)
+            print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
+            self.root.k_p = 0.65
+            self.root.ctr = 0
+            self.machine.recover()
+            # self.root.gain_increase_factor = 1.04
+            # self.root.interval = 1800
+
+        self.goal_err_sum = np.zeros(9)
         return self.root.k_p * err
 
     def predict(self, observation):
@@ -145,5 +210,7 @@ class MachinePolicy:
             force = self.align(observation)
         if self.machine.is_lower:
             force = self.lower(observation)
+        if self.machine.is_into:
+            force = self.into(observation)
 
         return force

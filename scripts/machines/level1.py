@@ -188,6 +188,7 @@ class MachinePolicy:
             self.root.k_p = 0.5
             self.root.interval = 300
             self.root.gain_increase_factor = 1.2
+            self.root.ctr = 0
             self.into_begin_time = None
             self.machine.recover_from_into()
 
@@ -221,6 +222,7 @@ class MachinePolicy:
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.04
             self.root.interval = 1800
+            self.into_begin_time = None
             self.machine.move_to_goal()
             
 

@@ -102,8 +102,7 @@ class MachinePolicy:
 
         for i in range(3):
             index = (self.rest_arm + 1 - i) % 3
-            # maybe decay this 1.7 factor if align is not feasible
-            locs[index] = 1.7 * \ 
+            locs[index] = 1.7 * \
                 R.from_rotvec(
                     np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 2

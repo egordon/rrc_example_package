@@ -186,7 +186,7 @@ class MachinePolicy:
         difference_y = [abs(p1 - p2)
                         for p1 in current_y for p2 in current_y if p1 != p2]
 
-        k_p = min(10.0, self.root.k_p)
+        k_p = min(4.0, self.root.k_p)
         if self.root.difficulty == 3:
             time_threshold = 5.0  # based on experimental observation
         else:

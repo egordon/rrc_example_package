@@ -302,5 +302,7 @@ class MachinePolicy:
             force = self.lower(observation)
         if self.machine.is_into:
             force = self.into(observation)
+        if self.machine.is_goal:
+            force = self.goal(observation)
 
         return force

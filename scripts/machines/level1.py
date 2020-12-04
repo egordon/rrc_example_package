@@ -102,7 +102,8 @@ class MachinePolicy:
 
         for i in range(3):
             index = (self.rest_arm + 1 - i) % 3
-            locs[index] = 1.7 * \
+            # maybe decay this 1.7 factor if align is not feasible
+            locs[index] = 1.7 * \ 
                 R.from_rotvec(
                     np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 2
@@ -270,7 +271,7 @@ class MachinePolicy:
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
         if self.root.difficulty == 1 and not self.root.goal_reached:
-            goal[2] += 0.001  # Reduces friction with floor
+            goal[2] += 0.005  # Reduces friction with floor
         goal_err = goal - desired
         err_mag = np.linalg.norm(goal_err[:3])
 

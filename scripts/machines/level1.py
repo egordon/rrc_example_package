@@ -23,12 +23,12 @@ class RRCMachine(StateMachine):
     into = State('INTO')
     goal = State('GOAL')
 
-    # restart = reset.to(reset)
     start = reset.to(align)
     lowering = align.to(lower)
     grasp = lower.to(into)
     move_to_goal = into.to(goal)
 
+    recover_from_align = align.to(reset)
     recover_from_lower = lower.to(reset)
     recover_from_into = into.to(reset)
     recover_from_goal = goal.to(reset)
@@ -59,6 +59,7 @@ class MachinePolicy:
         self.machine = RRCMachine()
 
         # state begin time variables
+        self.align_begin_time = None
         self.lower_begin_time = None
         self.into_begin_time = None
         self.goal_begin_time = None
@@ -93,8 +94,19 @@ class MachinePolicy:
         return self.root.k_p * err
 
     def align(self, observation):
-        # Get rest arm
-        # Align the other two arms around cuboid on opposite directions
+        if self.align_begin_time is None:
+            self.align_begin_time = time.time()
+
+        if time.time() - self.lower_begin_time > 10.0:
+            print("[ALIGN]: Switching to RESET at ",
+                  time.time() - self.root.start_time)
+            print("[ALIGN]: K_p ", self.root.k_p)
+            print("[ALIGN]: Cube pos ", observation['achieved_goal']['position'])
+            self.root.k_p = 0.5
+            self.root.ctr = 0
+            self.align_begin_time = None
+            self.machine.recover_from_align()
+
         current = get_tip_poses(observation)
         self.root.cube_position.append(observation["achieved_goal"]["position"])
         self.root.cube_orient.append(observation["achieved_goal"]["orientation"])
@@ -330,13 +342,6 @@ class MachinePolicy:
             # self.root.ctr = 0
             self.root.gain_increase_factor = 1.0
             # self.goal_begin_time = None
-
-        # if self.goal_reached and self.difficulty == 4:
-        #    self.state = States.ORIENT
-        #    print("[GOAL]: Switching to ORIENT at ", time.time() - self.start_time)
-        #    self.ctr = 0
-        #    self.goal_reached = False
-        #    self.goal_begin_time = None
 
         return (k_p * goal_err + 0.35 * into_err + 0.002 * self.goal_err_sum) * 0.2
 

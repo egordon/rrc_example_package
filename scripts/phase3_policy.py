@@ -9,10 +9,13 @@ import pybullet
 import robot_interfaces
 from rrc_example_package import cube_env
 from trifinger_simulation.tasks import move_cube
+from collections import deque
+
 
 from machines.level1 import MachinePolicy as Level1Machine
 from machines.level3 import MachinePolicy as Level3Machine
 from machines.level4 import MachinePolicy as Level4Machine
+
 
 class StateSpacePolicy:
     """Policy references one of many sub-state machines."""
@@ -25,8 +28,8 @@ class StateSpacePolicy:
         self.gain_increase_factor = 1.2
 
         # Cuboid dimensions
-        self.CUBOID_HEIGHT = 0.04 # full height 0.08
-        self.CUBOID_WIDTH = 0.01 # full width 0.02
+        self.CUBOID_HEIGHT = 0.04  # full height 0.08
+        self.CUBOID_WIDTH = 0.01  # full width 0.02
 
         # Variables Accessible to Sub-Machines
         self.t = 0
@@ -36,6 +39,10 @@ class StateSpacePolicy:
         self.interval = 100
         self.start_time = None
         self.goal_reached = False
+
+        # Pose and orientation history
+        self.cube_position = deque(maxlen=100)
+        self.cube_orient = deque(maxlen=100)
 
         # Set Submachine
         if difficulty == 1:
@@ -51,13 +58,13 @@ class StateSpacePolicy:
     def _get_gravcomp(self, observation):
         # Returns: 9 torques required for grav comp
         ret = pybullet.calculateInverseDynamics(self.finger.finger_id,
-                                                 observation["observation"]["position"].tolist(
-                                                 ),
-                                                 observation["observation"]["velocity"].tolist(
-                                                 ),
-                                                 np.zeros(
-                                                     len(observation["observation"]["position"])).tolist(),
-                                                 self.finger._pybullet_client_id)
+                                                observation["observation"]["position"].tolist(
+                                                ),
+                                                observation["observation"]["velocity"].tolist(
+                                                ),
+                                                np.zeros(
+                                                    len(observation["observation"]["position"])).tolist(),
+                                                self.finger._pybullet_client_id)
 
         return np.array(ret)
 

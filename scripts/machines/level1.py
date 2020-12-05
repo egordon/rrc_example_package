@@ -64,6 +64,9 @@ class MachinePolicy:
         self.goal_begin_time = None
 
     def reset(self, observation):
+        self.root.cube_position.clear()
+        self.root.cube_orient.clear()
+
         # Get Current Position
         current = observation["observation"]["tip_positions"].flatten()
 
@@ -93,7 +96,12 @@ class MachinePolicy:
         # Get rest arm
         # Align the other two arms around cuboid on opposite directions
         current = get_tip_poses(observation)
-        current_pos = observation["achieved_goal"]["position"]
+        self.root.cube_position.append(observation["achieved_goal"]["position"])
+        self.root.cube_orient.append(observation["achieved_goal"]["orientation"])
+        curr_cube_position = np.median(np.array(self.cube_position), axis=0)
+        x, y = curr_cube_position[:2]
+        current_pos = [x, y, self.root.CUBOID_WIDTH]
+
         # print ("current pos: ", current_pos)
         # print ("current orient: ", observation["achieved_goal"]["orientation"])
 
@@ -102,7 +110,7 @@ class MachinePolicy:
 
         for i in range(3):
             index = (self.rest_arm + 1 - i) % 3
-            locs[index] = 1.3 * \
+            locs[index] = 1.5 * \
                 R.from_rotvec(
                     np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 2
@@ -145,10 +153,13 @@ class MachinePolicy:
             self.lower_begin_time = None
             self.machine.recover_from_lower()
 
-        x, y = observation["achieved_goal"]["position"][:2]
-        z = self.root.CUBOID_WIDTH
+        self.root.cube_position.append(observation["achieved_goal"]["position"])
+        self.root.cube_orient.append(observation["achieved_goal"]["orientation"])
+        curr_cube_position = np.median(np.array(self.cube_position), axis=0)
+        x, y = curr_cube_position[:2]
+        current_pos = [x, y, self.root.CUBOID_WIDTH]
 
-        desired = np.tile(np.array([x, y, z]), 3) + \
+        desired = np.tile(current_pos, 3) + \
             (self.root.CUBOID_WIDTH + 0.015) * \
             np.array([0, 1.6, 0.015, 1.6 * 0.866, 1.6 * (-0.5),
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])

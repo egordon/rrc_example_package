@@ -167,10 +167,10 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached LOWER state")
             print("[LOWER]: K_p ", self.root.k_p)
-            self.root.k_p = 0.4
+            self.root.k_p = 0.6
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.1
-            self.root.interval = 200
+            self.root.gain_increase_factor = 1.2
+            self.root.interval = 150
             self.machine.grasp()
 
         return self.root.k_p * err
@@ -235,10 +235,10 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.root.k_p = 0.4
+            self.root.k_p = 0.2
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.1
-            self.root.interval = 1200
+            self.root.interval = 1000
             self.into_begin_time = None
             self.machine.move_to_goal()
             
@@ -327,7 +327,7 @@ class MachinePolicy:
         #    self.goal_reached = False
         #    self.goal_begin_time = None
 
-        return k_p * goal_err + 0.1 * into_err + 0.002 * self.goal_err_sum
+        return k_p * goal_err + 0.2 * into_err + 0.0008 * self.goal_err_sum
 
 
     def predict(self, observation):

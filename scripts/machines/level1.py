@@ -97,7 +97,7 @@ class MachinePolicy:
         if self.align_begin_time is None:
             self.align_begin_time = time.time()
 
-        if time.time() - self.lower_begin_time > 10.0:
+        if time.time() - self.align_begin_time > 10.0:
             print("[ALIGN]: Switching to RESET at ",
                   time.time() - self.root.start_time)
             print("[ALIGN]: K_p ", self.root.k_p)

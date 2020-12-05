@@ -110,7 +110,7 @@ class MachinePolicy:
         current = get_tip_poses(observation)
         self.root.cube_position.append(observation["achieved_goal"]["position"])
         self.root.cube_orient.append(observation["achieved_goal"]["orientation"])
-        curr_cube_position = np.median(np.array(self.cube_position), axis=0)
+        curr_cube_position = np.median(np.array(self.root.cube_position), axis=0)
         x, y = curr_cube_position[:2]
         current_pos = [x, y, self.root.CUBOID_WIDTH]
 
@@ -167,7 +167,7 @@ class MachinePolicy:
 
         self.root.cube_position.append(observation["achieved_goal"]["position"])
         self.root.cube_orient.append(observation["achieved_goal"]["orientation"])
-        curr_cube_position = np.median(np.array(self.cube_position), axis=0)
+        curr_cube_position = np.median(np.array(self.root.cube_position), axis=0)
         x, y = curr_cube_position[:2]
         current_pos = [x, y, self.root.CUBOID_WIDTH]
 

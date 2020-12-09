@@ -308,7 +308,7 @@ class MachinePolicy:
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
         k_p = min(0.5, self.root.k_p)
-        k_p_into = min(0.25, self.root.k_p_into)
+        k_p_into = min(0.1, self.root.k_p_into)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()

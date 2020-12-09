@@ -276,7 +276,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.015 and i != self.rest_arm:
+            if f < 0.03 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")
@@ -380,7 +380,7 @@ class MachinePolicy:
             self.root.gain_increase_factor = 1.0
             # self.goal_begin_time = None
 
-        return k_p * goal_err + 0.01 * into_err #+ 0.002 * self.goal_err_sum
+        return k_p * goal_err + 0.06 * into_err + 0.0001 * self.goal_err_sum
 
 
     def predict(self, observation):

@@ -181,9 +181,20 @@ class MachinePolicy:
             np.array([0, 1.6, 0.015, 1.6 * 0.866, 1.6 * (-0.5),
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
 
-        # testing with align xy values
-        desired = self.prev_align
-        desired[2::3] = [self.root.CUBOID_WIDTH] * 3
+        # # testing with align xy values
+        # desired = self.prev_align
+        locs = [np.zeros(3), np.zeros(3), np.zeros(3)]
+
+        for i in range(3):
+            index = (self.rest_arm + 1 - i) % 3
+            locs[index] = 1.4 * \
+                R.from_rotvec(
+                    np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
+            locs[index][2] = 0.01
+
+        desired = np.tile(current_pos, 3) + \
+            (self.root.CUBOID_WIDTH) * np.hstack(locs)
+
         # up_position = np.array([0.5, 1.2, -2.4] * 3)
         # upward_desired = np.array(
         #     self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()

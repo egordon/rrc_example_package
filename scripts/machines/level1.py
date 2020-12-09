@@ -196,7 +196,7 @@ class MachinePolicy:
         desired = np.tile(current_pos, 3) + \
             (self.root.CUBOID_WIDTH) * np.hstack(locs)
 
-        desired[2::3] = 0.012
+        desired[2::3] = 0.011
 
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
@@ -214,7 +214,7 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached LOWER state")
             print("[LOWER]: K_p ", self.root.k_p)
-            self.root.k_p = 0.38
+            self.root.k_p = 0.45
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.1
             self.root.interval = 100 

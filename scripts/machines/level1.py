@@ -130,12 +130,17 @@ class MachinePolicy:
         desired = np.tile(current_pos, 3) + \
             (self.root.CUBOID_WIDTH + 0.015) * np.hstack(locs)
 
-        up_position = np.array([0.5, 1.2, -2.4] * 3)
-        upward_desired = np.array(
-            self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+        # up_position = np.array([0.5, 1.2, -2.4] * 3)
+        # upward_desired = np.array(
+        #     self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
 
-        desired[self.rest_arm * 3: (self.rest_arm + 1) *
-                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+        # desired[self.rest_arm * 3: (self.rest_arm + 1) *
+        #         3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+
+        if self.rest_arm == 0:
+            desired[:3] = desired[3: 6]
+        else:
+            desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
 
         err = desired - current
         if np.linalg.norm(err) < 0.01:
@@ -179,12 +184,17 @@ class MachinePolicy:
         # testing with align xy values
         desired = self.prev_align
         desired[2::3] = [self.root.CUBOID_WIDTH] * 3
-        up_position = np.array([0.5, 1.2, -2.4] * 3)
-        upward_desired = np.array(
-            self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+        # up_position = np.array([0.5, 1.2, -2.4] * 3)
+        # upward_desired = np.array(
+        #     self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
 
-        desired[self.rest_arm * 3: (self.rest_arm + 1) *
-                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+        # desired[self.rest_arm * 3: (self.rest_arm + 1) *
+        #         3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+
+        if self.rest_arm == 0:
+            desired[:3] = desired[3: 6]
+        else:
+            desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
 
         err = desired - current
         if np.linalg.norm(err) < 0.01:
@@ -222,12 +232,17 @@ class MachinePolicy:
         x, y = observation["achieved_goal"]["position"][:2]
         z = self.root.CUBOID_WIDTH
         desired = np.tile(np.array([x, y, z]), 3)
-        up_position = np.array([0.5, 1.2, -2.4] * 3)
-        upward_desired = np.array(
-            self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+        # up_position = np.array([0.5, 1.2, -2.4] * 3)
+        # upward_desired = np.array(
+        #     self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
 
-        desired[self.rest_arm * 3: (self.rest_arm + 1) *
-                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+        # desired[self.rest_arm * 3: (self.rest_arm + 1) *
+        #         3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+
+        if self.rest_arm == 0:
+            desired[:3] = desired[3: 6]
+        else:
+            desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
 
         err = desired - current
 
@@ -279,13 +294,18 @@ class MachinePolicy:
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
         k_p = min(0.79, self.root.k_p)
-        up_position = np.array([0.5, 1.2, -2.4] * 3)
-        upward_desired = np.array(
-            self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+        # up_position = np.array([0.5, 1.2, -2.4] * 3)
+        # upward_desired = np.array(
+        #     self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
-        desired[self.rest_arm * 3: (self.rest_arm + 1) *
-                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+        # desired[self.rest_arm * 3: (self.rest_arm + 1) *
+        #         3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+    
+        if self.rest_arm == 0:
+            desired[:3] = desired[3: 6]
+        else:
+            desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)

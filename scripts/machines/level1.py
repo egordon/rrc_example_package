@@ -306,18 +306,18 @@ class MachinePolicy:
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
         k_p = min(0.79, self.root.k_p)
-        # up_position = np.array([0.5, 1.2, -2.4] * 3)
-        # upward_desired = np.array(
-        #     self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
+        up_position = np.array([0.5, 1.2, -2.4] * 3)
+        upward_desired = np.array(
+            self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
 
         desired = np.tile(observation["achieved_goal"]["position"], 3)
-        # desired[self.rest_arm * 3: (self.rest_arm + 1) *
-        #         3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+        desired[self.rest_arm * 3: (self.rest_arm + 1) *
+                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
     
-        if self.rest_arm == 0:
-            desired[:3] = desired[3: 6]
-        else:
-            desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
+        # if self.rest_arm == 0:
+        #     desired[:3] = desired[3: 6]
+        # else:
+        #     desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
@@ -326,13 +326,13 @@ class MachinePolicy:
         if self.root.difficulty == 1 and not self.root.goal_reached:
             goal[2::3] += 0.004  # Reduces friction with floor
 
-        # goal[self.rest_arm * 3: (self.rest_arm + 1) *
-        #         3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+        goal[self.rest_arm * 3: (self.rest_arm + 1) *
+                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
         
-        if self.rest_arm == 0:
-            goal[:3] = goal[3: 6]
-        else:
-            goal[self.rest_arm * 3: (self.rest_arm + 1) * 3] = goal[:3]
+        # if self.rest_arm == 0:
+        #     goal[:3] = goal[3: 6]
+        # else:
+        #     goal[self.rest_arm * 3: (self.rest_arm + 1) * 3] = goal[:3]
 
         goal_err = goal - desired
         if self.rest_arm == 0:

@@ -380,7 +380,7 @@ class MachinePolicy:
             self.root.gain_increase_factor = 1.0
             # self.goal_begin_time = None
 
-        return k_p * goal_err #+ 0.35 * into_err #+ 0.002 * self.goal_err_sum
+        return k_p * goal_err + 0.05 * into_err #+ 0.002 * self.goal_err_sum
 
 
     def predict(self, observation):

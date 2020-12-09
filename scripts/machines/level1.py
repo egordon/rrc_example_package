@@ -212,10 +212,10 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached LOWER state")
             print("[LOWER]: K_p ", self.root.k_p)
-            self.root.k_p = 0.6
+            self.root.k_p = 0.3
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.2
-            self.root.interval = 150
+            self.root.interval = 300
             self.machine.grasp()
 
         return self.root.k_p * err
@@ -235,7 +235,7 @@ class MachinePolicy:
         # if self.root.difficulty == 3:
         #     time_threshold = 5.0  # based on experimental observation
         # else:
-        time_threshold = 15.0
+        time_threshold = 25.0
 
         close_x = any(d < 0.0001 for d in difference_x)
         close_y = any(d < 0.0001 for d in difference_y)
@@ -276,7 +276,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.018 and i != self.rest_arm:
+            if f < 0.017 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")

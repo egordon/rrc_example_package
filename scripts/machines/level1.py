@@ -276,7 +276,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.014 and i != self.rest_arm:
+            if f < 0.011 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")
@@ -285,10 +285,10 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.root.k_p = 0.1
+            self.root.k_p = 0.15
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.06
-            self.root.interval = 1500
+            self.root.gain_increase_factor = 1.1
+            self.root.interval = 1200
             self.into_begin_time = None
             self.machine.move_to_goal()
             
@@ -324,7 +324,7 @@ class MachinePolicy:
 
         goal = np.tile(observation["desired_goal"]["position"], 3)
         if self.root.difficulty == 1 and not self.root.goal_reached:
-            goal[2::3] += 0.004  # Reduces friction with floor
+            goal[2::3] += 0.008  # Reduces friction with floor
 
         goal[self.rest_arm * 3: (self.rest_arm + 1) *
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]

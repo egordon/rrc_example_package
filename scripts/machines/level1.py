@@ -276,7 +276,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.02 and i != self.rest_arm:
+            if f < 0.018 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")
@@ -285,7 +285,7 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.root.k_p = 0.2
+            self.root.k_p = 0.1
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.06
             self.root.interval = 1500
@@ -380,7 +380,7 @@ class MachinePolicy:
             self.root.gain_increase_factor = 1.0
             # self.goal_begin_time = None
 
-        return k_p * goal_err + 0.06 * into_err + 0.0001 * self.goal_err_sum
+        return k_p * goal_err + 0.04 * into_err + 0.0001 * self.goal_err_sum
 
 
     def predict(self, observation):

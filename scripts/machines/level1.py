@@ -174,10 +174,11 @@ class MachinePolicy:
         self.root.cube_orient.append(observation["achieved_goal"]["orientation"])
         curr_cube_position = np.median(np.array(self.root.cube_position), axis=0)
         x, y = curr_cube_position[:2]
-        current_pos = [x, y, self.root.CUBOID_WIDTH]
+        # current_pos = [x, y, self.root.CUBOID_WIDTH]
+        current_pos = curr_cube_position
 
         desired = np.tile(current_pos, 3) + \
-            (self.root.CUBOID_WIDTH + 0.015) * \
+            (self.root.CUBOID_WIDTH) * \
             np.array([0, 1.6, 0.015, 1.6 * 0.866, 1.6 * (-0.5),
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
 
@@ -187,10 +188,10 @@ class MachinePolicy:
 
         for i in range(3):
             index = (self.rest_arm + 1 - i) % 3
-            locs[index] = 1.4 * \
+            locs[index] = 1.5 * \
                 R.from_rotvec(
                     np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
-            locs[index][2] = 0.01
+            locs[index][2] = 0.015
 
         desired = np.tile(current_pos, 3) + \
             (self.root.CUBOID_WIDTH) * np.hstack(locs)
@@ -231,17 +232,17 @@ class MachinePolicy:
                         for p1 in current_y for p2 in current_y if p1 != p2]
 
         k_p = min(4.0, self.root.k_p)
-        if self.root.difficulty == 3:
-            time_threshold = 5.0  # based on experimental observation
-        else:
-            time_threshold = 15.0
+        # if self.root.difficulty == 3:
+        #     time_threshold = 5.0  # based on experimental observation
+        # else:
+        time_threshold = 15.0
 
         close_x = any(d < 0.0001 for d in difference_x)
         close_y = any(d < 0.0001 for d in difference_y)
         close = close_x and close_y
 
-        x, y = observation["achieved_goal"]["position"][:2]
-        z = self.root.CUBOID_WIDTH
+        x, y, z = observation["achieved_goal"]["position"][:2]
+        # z = self.root.CUBOID_WIDTH
         desired = np.tile(np.array([x, y, z]), 3)
         # up_position = np.array([0.5, 1.2, -2.4] * 3)
         # upward_desired = np.array(
@@ -261,7 +262,7 @@ class MachinePolicy:
         tip_forces = observation["observation"]["tip_force"] - \
             self.force_offset
 
-        if close or time.time() - self.into_begin_time > time_threshold:
+        if time.time() - self.into_begin_time > time_threshold:
             print("[INTO]: Switching to RESET at ",
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)

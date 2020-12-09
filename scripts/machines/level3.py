@@ -137,6 +137,11 @@ class MachinePolicy:
         desired[self.rest_arm * 3: (self.rest_arm + 1) *
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
+        # if self.rest_arm == 0:
+        #     desired[:3] = desired[3: 6]
+        # else:
+        #     desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
+
         err = desired - current
         if np.linalg.norm(err) < 0.01:
             print("Reached ALIGN state")
@@ -169,16 +174,30 @@ class MachinePolicy:
         self.root.cube_orient.append(observation["achieved_goal"]["orientation"])
         curr_cube_position = np.median(np.array(self.root.cube_position), axis=0)
         x, y = curr_cube_position[:2]
-        current_pos = [x, y, self.root.CUBOID_WIDTH]
+        # current_pos = [x, y, self.root.CUBOID_WIDTH]
+        current_pos = curr_cube_position
 
         desired = np.tile(current_pos, 3) + \
-            (self.root.CUBOID_WIDTH + 0.015) * \
+            (self.root.CUBOID_WIDTH) * \
             np.array([0, 1.6, 0.015, 1.6 * 0.866, 1.6 * (-0.5),
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
 
-        # testing with align xy values
-        desired = self.prev_align
-        desired[2::3] = [self.root.CUBOID_WIDTH] * 3
+        # # testing with align xy values
+        # desired = self.prev_align
+        locs = [np.zeros(3), np.zeros(3), np.zeros(3)]
+
+        for i in range(3):
+            index = (self.rest_arm + 1 - i) % 3
+            locs[index] = 1.5 * \
+                R.from_rotvec(
+                    np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
+            locs[index][2] = 0.012
+
+        desired = np.tile(current_pos, 3) + \
+            (self.root.CUBOID_WIDTH) * np.hstack(locs)
+
+        desired[2::3] = 0.011
+
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
@@ -186,14 +205,19 @@ class MachinePolicy:
         desired[self.rest_arm * 3: (self.rest_arm + 1) *
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
+        # if self.rest_arm == 0:
+        #     desired[:3] = desired[3: 6]
+        # else:
+        #     desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
+
         err = desired - current
         if np.linalg.norm(err) < 0.01:
             print("Reached LOWER state")
             print("[LOWER]: K_p ", self.root.k_p)
-            self.root.k_p = 0.6
+            self.root.k_p = 0.35
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.2
-            self.root.interval = 150
+            self.root.gain_increase_factor = 1.1
+            self.root.interval = 100 
             self.machine.grasp()
 
         return self.root.k_p * err
@@ -209,15 +233,18 @@ class MachinePolicy:
         difference_y = [abs(p1 - p2)
                         for p1 in current_y for p2 in current_y if p1 != p2]
 
-        k_p = min(4.0, self.root.k_p)
-        time_threshold = 15.0
+        k_p = min(2.0, self.root.k_p)
+        # if self.root.difficulty == 3:
+        #     time_threshold = 5.0  # based on experimental observation
+        # else:
+        time_threshold = 25.0
 
         close_x = any(d < 0.0001 for d in difference_x)
         close_y = any(d < 0.0001 for d in difference_y)
         close = close_x and close_y
 
-        x, y = observation["achieved_goal"]["position"][:2]
-        z = self.root.CUBOID_WIDTH
+        x, y, z = observation["achieved_goal"]["position"]
+        # z = self.root.CUBOID_WIDTH
         desired = np.tile(np.array([x, y, z]), 3)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
@@ -226,13 +253,18 @@ class MachinePolicy:
         desired[self.rest_arm * 3: (self.rest_arm + 1) *
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
 
+        # if self.rest_arm == 0:
+        #     desired[:3] = desired[3: 6]
+        # else:
+        #     desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
+
         err = desired - current
 
         # Read Tip Force
         tip_forces = observation["observation"]["tip_force"] - \
             self.force_offset
 
-        if close or time.time() - self.into_begin_time > time_threshold:
+        if time.time() - self.into_begin_time > time_threshold:
             print("[INTO]: Switching to RESET at ",
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
@@ -246,7 +278,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.015 and i != self.rest_arm:
+            if f < 0.012 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")
@@ -255,10 +287,10 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.root.k_p = 0.65
+            self.root.k_p = 0.18
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.04
-            self.root.interval = 1000
+            self.root.gain_increase_factor = 1.1
+            self.root.interval = 1200
             self.into_begin_time = None
             self.machine.move_to_goal()
             
@@ -275,7 +307,8 @@ class MachinePolicy:
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
-        k_p = min(0.79, self.root.k_p)
+        k_p = min(0.5, self.root.k_p)
+        k_p_into = min(0.09, self.root.k_p_into)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
@@ -283,16 +316,26 @@ class MachinePolicy:
         desired = np.tile(observation["achieved_goal"]["position"], 3)
         desired[self.rest_arm * 3: (self.rest_arm + 1) *
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+    
+        # if self.rest_arm == 0:
+        #     desired[:3] = desired[3: 6]
+        # else:
+        #     desired[self.rest_arm * 3: (self.rest_arm + 1) * 3] = desired[:3]
 
         into_err = desired - current
         into_err /= np.linalg.norm(into_err)
 
         goal = np.tile(observation["desired_goal"]["position"], 3)
         if self.root.difficulty == 1 and not self.root.goal_reached:
-            goal[2::3] += 0.004  # Reduces friction with floor
+            goal[2::3] += 0.008  # Reduces friction with floor
 
         goal[self.rest_arm * 3: (self.rest_arm + 1) *
                 3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+        
+        # if self.rest_arm == 0:
+        #     goal[:3] = goal[3: 6]
+        # else:
+        #     goal[self.rest_arm * 3: (self.rest_arm + 1) * 3] = goal[:3]
 
         goal_err = goal - desired
         if self.rest_arm == 0:
@@ -303,7 +346,10 @@ class MachinePolicy:
         if err_mag < 0.1:
             self.goal_err_sum += goal_err
 
-        time_threshold = 40.0
+        if self.root.difficulty == 1:
+            time_threshold = 40.0
+        else:
+            time_threshold = 30.0
 
         if not self.root.goal_reached and time.time() - self.goal_begin_time > time_threshold:
             print("[GOAL]: Switching to RESET at ",
@@ -313,6 +359,7 @@ class MachinePolicy:
             self.root.k_p = 0.5
             self.root.interval = 100
             self.root.gain_increase_factor = 1.2
+            self.root.gain_increase_factor_into = 1.04
             self.root.ctr = 0
             self.root.success_ctr = 0
             self.goal_begin_time = None
@@ -335,9 +382,10 @@ class MachinePolicy:
             self.root.goal_reached = True
             # self.root.ctr = 0
             self.root.gain_increase_factor = 1.0
+            self.root.gain_increase_factor_into = 1.0
             # self.goal_begin_time = None
 
-        return (k_p * goal_err + 0.35 * into_err + 0.002 * self.goal_err_sum) * 0.2
+        return k_p * goal_err + k_p_into * into_err + 0.0008 * self.goal_err_sum
 
 
     def predict(self, observation):

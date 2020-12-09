@@ -150,7 +150,7 @@ def main():
         if ctr % policy.interval == 0 and policy.ctr < 20:
             policy.ctr += 1
             policy.k_p *= policy.gain_increase_factor
-            if policy.machine.is_goal:
+            if policy.machine.machine.is_goal:
                 policy.k_p_into *= policy.gain_increase_factor_into
         action = policy.predict(observation)
         try:

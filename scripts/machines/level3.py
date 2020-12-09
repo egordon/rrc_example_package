@@ -290,7 +290,7 @@ class MachinePolicy:
             self.root.k_p = 0.18
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.1
-            self.root.interval = 1200
+            self.root.interval = 2000
             self.into_begin_time = None
             self.machine.move_to_goal()
             

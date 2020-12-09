@@ -34,6 +34,8 @@ class StateSpacePolicy:
         # Variables Accessible to Sub-Machines
         self.t = 0
         self.k_p = 0.4
+        self.k_p_into = 0.065
+        self.gain_increase_factor_into = 1.1
         self.ctr = 0
         self.success_ctr = 0
         self.interval = 200
@@ -148,6 +150,8 @@ def main():
         if ctr % policy.interval == 0 and policy.ctr < 20:
             policy.ctr += 1
             policy.k_p *= policy.gain_increase_factor
+            if policy.machine.is_goal:
+                policy.k_p_into *= policy.gain_increase_factor_into
         action = policy.predict(observation)
         try:
             observation, reward, is_done, info = env.step(action)

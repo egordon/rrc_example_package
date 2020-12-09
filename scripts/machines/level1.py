@@ -307,7 +307,8 @@ class MachinePolicy:
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
-        k_p = min(0.79, self.root.k_p)
+        k_p = min(0.5, self.root.k_p)
+        k_p_into = min(0.25, self.root.k_p_into)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
@@ -382,7 +383,7 @@ class MachinePolicy:
             self.root.gain_increase_factor = 1.0
             # self.goal_begin_time = None
 
-        return k_p * goal_err + 0.065 * into_err + 0.0008 * self.goal_err_sum
+        return k_p * goal_err + k_p_into * into_err + 0.0008 * self.goal_err_sum
 
 
     def predict(self, observation):

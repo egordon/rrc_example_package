@@ -191,10 +191,12 @@ class MachinePolicy:
             locs[index] = 1.5 * \
                 R.from_rotvec(
                     np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
-            locs[index][2] = 0.015
+            locs[index][2] = 0.012
 
         desired = np.tile(current_pos, 3) + \
             (self.root.CUBOID_WIDTH) * np.hstack(locs)
+
+        desired[2::3] = 0.012
 
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(

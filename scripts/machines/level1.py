@@ -214,7 +214,7 @@ class MachinePolicy:
             print("[LOWER]: K_p ", self.root.k_p)
             self.root.k_p = 0.3
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.2
+            self.root.gain_increase_factor = 1.08
             self.root.interval = 300
             self.machine.grasp()
 
@@ -276,7 +276,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.017 and i != self.rest_arm:
+            if f < 0.014 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")

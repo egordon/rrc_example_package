@@ -314,8 +314,13 @@ class MachinePolicy:
         if self.root.difficulty == 1 and not self.root.goal_reached:
             goal[2::3] += 0.004  # Reduces friction with floor
 
-        goal[self.rest_arm * 3: (self.rest_arm + 1) *
-                3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+        # goal[self.rest_arm * 3: (self.rest_arm + 1) *
+        #         3] = upward_desired[self.rest_arm * 3: (self.rest_arm + 1) * 3]
+        
+        if self.rest_arm == 0:
+            goal[:3] = goal[3: 6]
+        else:
+            goal[self.rest_arm * 3: (self.rest_arm + 1) * 3] = goal[:3]
 
         goal_err = goal - desired
         if self.rest_arm == 0:

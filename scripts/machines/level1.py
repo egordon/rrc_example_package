@@ -214,8 +214,8 @@ class MachinePolicy:
             print("[LOWER]: K_p ", self.root.k_p)
             self.root.k_p = 0.3
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.08
-            self.root.interval = 300
+            self.root.gain_increase_factor = 1.1
+            self.root.interval = 100 
             self.machine.grasp()
 
         return self.root.k_p * err

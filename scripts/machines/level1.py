@@ -241,7 +241,7 @@ class MachinePolicy:
         close_y = any(d < 0.0001 for d in difference_y)
         close = close_x and close_y
 
-        x, y, z = observation["achieved_goal"]["position"][:2]
+        x, y, z = observation["achieved_goal"]["position"]
         # z = self.root.CUBOID_WIDTH
         desired = np.tile(np.array([x, y, z]), 3)
         # up_position = np.array([0.5, 1.2, -2.4] * 3)

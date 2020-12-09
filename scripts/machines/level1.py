@@ -359,6 +359,7 @@ class MachinePolicy:
             self.root.k_p = 0.5
             self.root.interval = 100
             self.root.gain_increase_factor = 1.2
+            self.root.gain_increase_factor_into = 1.04
             self.root.ctr = 0
             self.root.success_ctr = 0
             self.goal_begin_time = None
@@ -381,6 +382,7 @@ class MachinePolicy:
             self.root.goal_reached = True
             # self.root.ctr = 0
             self.root.gain_increase_factor = 1.0
+            self.root.gain_increase_factor_into = 1.0
             # self.goal_begin_time = None
 
         return k_p * goal_err + k_p_into * into_err + 0.0008 * self.goal_err_sum

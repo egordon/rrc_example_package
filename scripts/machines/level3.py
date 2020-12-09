@@ -343,7 +343,7 @@ class MachinePolicy:
         else:
             err_mag = np.linalg.norm(goal_err[:3])
 
-        if err_mag < 0.1:
+        if err_mag < 0.15:
             self.goal_err_sum += goal_err
 
         if self.root.difficulty == 1:

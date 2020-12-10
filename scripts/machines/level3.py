@@ -128,7 +128,7 @@ class MachinePolicy:
             locs[index][2] = 2
 
         desired = np.tile(current_pos, 3) + \
-            (self.root.CUBOID_WIDTH + 0.015) * np.hstack(locs)
+            (self.root.CUBOID_WIDTH + 0.02) * np.hstack(locs)
 
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
@@ -194,7 +194,7 @@ class MachinePolicy:
             locs[index][2] = 0.012
 
         desired = np.tile(current_pos, 3) + \
-            (self.root.CUBOID_WIDTH) * np.hstack(locs)
+            (self.root.CUBOID_WIDTH + 0.02) * np.hstack(locs)
 
         desired[2::3] = 0.011
 

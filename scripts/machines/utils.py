@@ -27,11 +27,14 @@ def get_rest_arm2(observation):
     manip_axis = R.from_quat(current).apply(axis)
 
     rot = R.from_quat(current)
-    yaw = np.arctan2(manip_axis[1], manip_axis[0]) * 180. / np.pi
+    yaw = (np.arctan2(manip_axis[1], manip_axis[0]) + np.pi/2) * 180. / np.pi
 
-    if yaw > -90.0 and yaw <= 30.0:
+    if yaw > 180.:
+        yaw -= 360.
+
+    if yaw > -90.0 and yaw < 30.0:
         rest_arm = 1
-    elif yaw > 30.0 and yaw <= 150:
+    elif yaw > 30.0 and yaw < 150:
         rest_arm = 0
     else:
         rest_arm = 2

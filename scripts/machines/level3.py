@@ -278,7 +278,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.010 and i != self.rest_arm:
+            if f < 0.012 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")

@@ -37,10 +37,11 @@ def get_rest_arm2(observation):
     #     rest_arm = 2
 
     if yaw > -90.0 and yaw <= 30.0:
-        rest_arm = 1
-    elif yaw > 30.0 and yaw <= 150:
         rest_arm = 0
+    elif yaw > 30.0 and yaw <= 150:
+        rest_arm = 1
     else:
         rest_arm = 2
     manip_axis[2] = 0.
+
     return rest_arm, manip_axis

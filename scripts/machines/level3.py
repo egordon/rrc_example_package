@@ -124,7 +124,7 @@ class MachinePolicy:
             index = (self.rest_arm + 1 - i) % 3
             locs[index] = 1.7 * \
                 R.from_rotvec(
-                    -np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
+                    np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 2
 
         desired = np.tile(current_pos, 3) + \
@@ -190,7 +190,7 @@ class MachinePolicy:
             index = (self.rest_arm + 1 - i) % 3
             locs[index] = 1.7 * \
                 R.from_rotvec(
-                    -np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
+                    np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 0.012
 
         desired = np.tile(current_pos, 3) + \

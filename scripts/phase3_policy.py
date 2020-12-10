@@ -35,7 +35,7 @@ class StateSpacePolicy:
         self.t = 0
         self.k_p = 0.4
         self.k_p_into = 0.065
-        self.gain_increase_factor_into = 1.04
+        self.gain_increase_factor_into = 1.03
         self.ctr = 0
         self.success_ctr = 0
         self.interval = 200

@@ -214,9 +214,9 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached LOWER state")
             print("[LOWER]: K_p ", self.root.k_p)
-            self.root.k_p = 0.35
+            self.root.k_p = 0.1
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.1
+            self.root.gain_increase_factor = 1.15
             self.root.interval = 50 
             self.machine.grasp()
 
@@ -278,7 +278,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.012 and i != self.rest_arm:
+            if f < 0.02 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")
@@ -307,7 +307,7 @@ class MachinePolicy:
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
-        k_p = min(0.5, self.root.k_p)
+        k_p = min(0.35, self.root.k_p)
         k_p_into = min(0.08, self.root.k_p_into)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
@@ -385,7 +385,7 @@ class MachinePolicy:
             self.root.gain_increase_factor_into = 1.0
             # self.goal_begin_time = None
 
-        return k_p * goal_err + 0.07 * into_err + 0.001 * self.goal_err_sum
+        return k_p * goal_err + 0.07 * into_err + 0.0006 * self.goal_err_sum
 
 
     def predict(self, observation):

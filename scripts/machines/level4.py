@@ -190,10 +190,10 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached LOWER state")
             print("[LOWER]: K_p ", self.root.k_p)
-            self.root.k_p = 0.6
+            self.root.k_p = 0.15
             self.root.ctr = 0
-            self.root.gain_increase_factor = 1.2
-            self.root.interval = 150
+            self.root.gain_increase_factor = 1.1
+            self.root.interval = 100
             self.machine.grasp()
 
         return self.root.k_p * err
@@ -209,7 +209,7 @@ class MachinePolicy:
         difference_y = [abs(p1 - p2)
                         for p1 in current_y for p2 in current_y if p1 != p2]
 
-        k_p = min(2.5, self.root.k_p)
+        k_p = min(2.0, self.root.k_p)
         time_threshold = 15.0
 
         close_x = any(d < 0.0001 for d in difference_x)
@@ -246,7 +246,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.014 and i != self.rest_arm:
+            if f < 0.015 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")
@@ -255,7 +255,7 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.root.k_p = 0.65
+            self.root.k_p = 0.5
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.04
             self.root.interval = 1500
@@ -275,7 +275,7 @@ class MachinePolicy:
         difference = [abs(p1 - p2)
                       for p1 in current_x for p2 in current_x if p1 != p2]
 
-        k_p = min(0.9, self.root.k_p)
+        k_p = min(0.78, self.root.k_p)
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()

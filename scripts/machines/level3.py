@@ -122,13 +122,13 @@ class MachinePolicy:
 
         for i in range(3):
             index = (self.rest_arm + 1 - i) % 3
-            locs[index] = 1.7 * \
+            locs[index] = 1.5 * \
                 R.from_rotvec(
                     np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 2
 
         desired = np.tile(current_pos, 3) + \
-            (self.root.CUBOID_WIDTH + 0.02) * np.hstack(locs)
+            (self.root.CUBOID_WIDTH + 0.01) * np.hstack(locs)
 
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
@@ -188,13 +188,13 @@ class MachinePolicy:
 
         for i in range(3):
             index = (self.rest_arm + 1 - i) % 3
-            locs[index] = 1.7 * \
+            locs[index] = 1.4 * \
                 R.from_rotvec(
                     np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 0.012
 
         desired = np.tile(current_pos, 3) + \
-            (self.root.CUBOID_WIDTH + 0.02) * np.hstack(locs)
+            (self.root.CUBOID_WIDTH) * np.hstack(locs)
 
         desired[2::3] = 0.011
 
@@ -278,7 +278,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.014 and i != self.rest_arm:
+            if f < 0.011 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")

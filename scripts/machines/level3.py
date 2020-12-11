@@ -144,7 +144,7 @@ class MachinePolicy:
 
         err = desired - current
         if np.linalg.norm(err) < 0.01:
-            print("Reached ALIGN state")
+            print("Reached ALIGN state at ", time.time() - self.root.start_time)
             print("[ALIGN]: K_p ", self.root.k_p)
             self.root.k_p = 0.4
             self.root.ctr = 0
@@ -212,7 +212,7 @@ class MachinePolicy:
 
         err = desired - current
         if np.linalg.norm(err) < 0.01:
-            print("Reached LOWER state")
+            print("Reached LOWER state at time: ", time.time() - self.root.start_time)
             print("[LOWER]: K_p ", self.root.k_p)
             self.root.k_p = 0.1
             self.root.ctr = 0

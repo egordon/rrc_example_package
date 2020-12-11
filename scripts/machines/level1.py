@@ -300,7 +300,7 @@ class MachinePolicy:
         else:
             err_mag = np.linalg.norm(goal_err[:3])
 
-        if err_mag < 0.11:
+        if err_mag < 0.07:
             self.goal_err_sum += goal_err
 
         time_threshold = 40.0
@@ -337,7 +337,7 @@ class MachinePolicy:
             self.root.gain_increase_factor = 1.0
             # self.goal_begin_time = None
 
-        return (k_p * goal_err + 0.35 * into_err + 0.002 * self.goal_err_sum) * 0.2
+        return (k_p * goal_err + 0.35 * into_err + 0.001 * self.goal_err_sum) * 0.2
 
 
     def predict(self, observation):

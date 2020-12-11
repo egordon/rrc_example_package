@@ -178,7 +178,7 @@ class MachinePolicy:
 
         # testing with align xy values
         desired = self.prev_align
-        desired[2::3] = curr_cube_position[2] * 3
+        desired[2::3] = [self.root.CUBOID_WIDTH] * 3
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
             self.root.finger.pinocchio_utils.forward_kinematics(up_position)).flatten()
@@ -337,7 +337,7 @@ class MachinePolicy:
             self.root.gain_increase_factor = 1.0
             # self.goal_begin_time = None
 
-        return (k_p * goal_err + 0.35 * into_err + 0.001 * self.goal_err_sum) * 0.2
+        return (k_p * goal_err + 0.38 * into_err + 0.001 * self.goal_err_sum) * 0.2
 
 
     def predict(self, observation):

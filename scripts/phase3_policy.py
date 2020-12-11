@@ -38,7 +38,7 @@ class StateSpacePolicy:
         self.gain_increase_factor_into = 1.03
         self.ctr = 0
         self.success_ctr = 0
-        self.interval = 200
+        self.interval = 100
         self.start_time = None
         self.goal_reached = False
 

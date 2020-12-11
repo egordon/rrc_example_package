@@ -183,18 +183,18 @@ class MachinePolicy:
                       0.015, 1.6 * (-0.866), 1.6 * (-0.5), 0.015])
 
         # # testing with align xy values
-        # desired = self.prev_align
-        locs = [np.zeros(3), np.zeros(3), np.zeros(3)]
+        desired = self.prev_align
+        # locs = [np.zeros(3), np.zeros(3), np.zeros(3)]
 
-        for i in range(3):
-            index = (self.rest_arm + 1 - i) % 3
-            locs[index] = 1.5 * \
-                R.from_rotvec(
-                    np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
-            locs[index][2] = 0.012
+        # for i in range(3):
+        #     index = (self.rest_arm + 1 - i) % 3
+        #     locs[index] = 1.5 * \
+        #         R.from_rotvec(
+        #             np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
+        #     locs[index][2] = 0.012
 
-        desired = np.tile(current_pos, 3) + \
-            (self.root.CUBOID_WIDTH + 0.01) * np.hstack(locs)
+        # desired = np.tile(current_pos, 3) + \
+        #     (self.root.CUBOID_WIDTH + 0.01) * np.hstack(locs)
 
         desired[2::3] = 0.008
 

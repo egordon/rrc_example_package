@@ -287,7 +287,7 @@ class MachinePolicy:
                   time.time() - self.root.start_time)
             print("[INTO]: K_p ", self.root.k_p)
             print("[INTO]: Cube pos ", observation['achieved_goal']['position'])
-            self.root.k_p = 0.12
+            self.root.k_p = 0.15
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.1
             self.root.interval = 1800
@@ -385,7 +385,7 @@ class MachinePolicy:
             self.root.gain_increase_factor_into = 1.0
             # self.goal_begin_time = None
 
-        return k_p * goal_err + 0.09 * into_err + 0.0006 * self.goal_err_sum
+        return k_p * goal_err + 0.09 * into_err + 0.0001 * self.goal_err_sum
 
 
     def predict(self, observation):

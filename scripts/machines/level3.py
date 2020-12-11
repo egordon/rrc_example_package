@@ -214,7 +214,7 @@ class MachinePolicy:
         if np.linalg.norm(err) < 0.01:
             print("Reached LOWER state at time: ", time.time() - self.root.start_time)
             print("[LOWER]: K_p ", self.root.k_p)
-            self.root.k_p = 0.1
+            self.root.k_p = 0.2
             self.root.ctr = 0
             self.root.gain_increase_factor = 1.15
             self.root.interval = 50 
@@ -278,7 +278,7 @@ class MachinePolicy:
 
         switch = True
         for i, f in enumerate(tip_forces):
-            if f < 0.011 and i != self.rest_arm:
+            if f < 0.010 and i != self.rest_arm:
                 switch = False
         if switch:
             print("Reached INTO state")

@@ -122,7 +122,7 @@ class MachinePolicy:
 
         for i in range(3):
             index = (self.rest_arm + 1 - i) % 3
-            locs[index] = 1.5 * \
+            locs[index] = 1.6 * \
                 R.from_rotvec(
                     np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 2
@@ -160,7 +160,7 @@ class MachinePolicy:
             self.lower_begin_time = time.time()
         current = get_tip_poses(observation)
 
-        if time.time() - self.lower_begin_time > 10.0:
+        if time.time() - self.lower_begin_time > 15.0:
             print("[LOWER]: Switching to RESET at ",
                   time.time() - self.root.start_time)
             print("[LOWER]: K_p ", self.root.k_p)
@@ -188,15 +188,15 @@ class MachinePolicy:
 
         for i in range(3):
             index = (self.rest_arm + 1 - i) % 3
-            locs[index] = 1.4 * \
+            locs[index] = 1.5 * \
                 R.from_rotvec(
                     np.pi/4 * (i-1.0) * np.array([0, 0, 1])).apply(self.manip_axis)
             locs[index][2] = 0.012
 
         desired = np.tile(current_pos, 3) + \
-            (self.root.CUBOID_WIDTH) * np.hstack(locs)
+            (self.root.CUBOID_WIDTH + 0.01) * np.hstack(locs)
 
-        desired[2::3] = 0.011
+        desired[2::3] = 0.008
 
         up_position = np.array([0.5, 1.2, -2.4] * 3)
         upward_desired = np.array(
